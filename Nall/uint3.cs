@@ -13,12 +13,12 @@ namespace Nall
 
         public static uint3 operator ++(uint3 number)
         {
-            return number + 1;
+            return new uint3(number + 1);
         }
 
         public static uint3 operator --(uint3 number)
         {
-            return number - 1;
+            return new uint3(number - 1);
         }
 
         public uint Assign(uint i)
@@ -26,54 +26,54 @@ namespace Nall
             return data = Bit.uclip(bits, i);
         }
 
-        public static uint3 operator |(uint3 number, uint i)
+        public static uint operator |(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data | i));
+            return Bit.uclip(bits, number.data | i);
         }
 
-        public static uint3 operator ^(uint3 number, uint i)
+        public static uint operator ^(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data ^ i));
+            return Bit.uclip(bits, number.data ^ i);
         }
 
-        public static uint3 operator &(uint3 number, uint i)
+        public static uint operator &(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data & i));
+            return Bit.uclip(bits, number.data & i);
         }
 
-        public static uint3 operator <<(uint3 number, int i)
+        public static uint operator <<(uint3 number, int i)
         {
-            return new uint3(Bit.uclip(bits, number.data << i));
+            return Bit.uclip(bits, number.data << i);
         }
 
-        public static uint3 operator >>(uint3 number, int i)
+        public static uint operator >>(uint3 number, int i)
         {
-            return new uint3(Bit.uclip(bits, number.data >> i));
+            return Bit.uclip(bits, number.data >> i);
         }
 
-        public static uint3 operator +(uint3 number, uint i)
+        public static uint operator +(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data + i));
+            return Bit.uclip(bits, number.data + i);
         }
 
-        public static uint3 operator -(uint3 number, uint i)
+        public static uint operator -(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data - i));
+            return Bit.uclip(bits, number.data - i);
         }
 
-        public static uint3 operator *(uint3 number, uint i)
+        public static uint operator *(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data * i));
+            return Bit.uclip(bits, number.data * i);
         }
 
-        public static uint3 operator /(uint3 number, uint i)
+        public static uint operator /(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data / i));
+            return Bit.uclip(bits, number.data / i);
         }
 
-        public static uint3 operator %(uint3 number, uint i)
+        public static uint operator %(uint3 number, uint i)
         {
-            return new uint3(Bit.uclip(bits, number.data % i));
+            return Bit.uclip(bits, number.data % i);
         }
 
         public uint3(uint i)

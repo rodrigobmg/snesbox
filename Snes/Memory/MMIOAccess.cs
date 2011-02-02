@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
     class MMIOAccess : Memory
@@ -15,14 +16,20 @@ namespace Snes
             _mmio[addr & 0x7fff] = access;
         }
 
-        public override byte read(uint addr)
+        public override IEnumerable read(uint addr, Result result)
         {
-            return _mmio[addr & 0x7fff].mmio_read(addr);
+            foreach (var e in _mmio[addr & 0x7fff].mmio_read(addr, result))
+            {
+                yield return e;
+            };
         }
 
-        public override void write(uint addr, byte data)
+        public override IEnumerable write(uint addr, byte data)
         {
-            _mmio[addr & 0x7fff].mmio_write(addr, data);
+            foreach (var e in _mmio[addr & 0x7fff].mmio_write(addr, data))
+            {
+                yield return e;
+            };
         }
 
         public MMIOAccess()

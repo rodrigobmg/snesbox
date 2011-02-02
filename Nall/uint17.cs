@@ -13,12 +13,12 @@ namespace Nall
 
         public static uint17 operator ++(uint17 number)
         {
-            return number + 1;
+            return new uint17(number + 1);
         }
 
         public static uint17 operator --(uint17 number)
         {
-            return number - 1;
+            return new uint17(number - 1);
         }
 
         public uint Assign(uint i)
@@ -26,54 +26,54 @@ namespace Nall
             return data = Bit.uclip(bits, i);
         }
 
-        public static uint17 operator |(uint17 number, uint i)
+        public static uint operator |(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data | i));
+            return Bit.uclip(bits, number.data | i);
         }
 
-        public static uint17 operator ^(uint17 number, uint i)
+        public static uint operator ^(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data ^ i));
+            return Bit.uclip(bits, number.data ^ i);
         }
 
-        public static uint17 operator &(uint17 number, uint i)
+        public static uint operator &(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data & i));
+            return Bit.uclip(bits, number.data & i);
         }
 
-        public static uint17 operator <<(uint17 number, int i)
+        public static uint operator <<(uint17 number, int i)
         {
-            return new uint17(Bit.uclip(bits, number.data << i));
+            return Bit.uclip(bits, number.data << i);
         }
 
-        public static uint17 operator >>(uint17 number, int i)
+        public static uint operator >>(uint17 number, int i)
         {
-            return new uint17(Bit.uclip(bits, number.data >> i));
+            return Bit.uclip(bits, number.data >> i);
         }
 
-        public static uint17 operator +(uint17 number, uint i)
+        public static uint operator +(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data + i));
+            return Bit.uclip(bits, number.data + i);
         }
 
-        public static uint17 operator -(uint17 number, uint i)
+        public static uint operator -(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data - i));
+            return Bit.uclip(bits, number.data - i);
         }
 
-        public static uint17 operator *(uint17 number, uint i)
+        public static uint operator *(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data * i));
+            return Bit.uclip(bits, number.data * i);
         }
 
-        public static uint17 operator /(uint17 number, uint i)
+        public static uint operator /(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data / i));
+            return Bit.uclip(bits, number.data / i);
         }
 
-        public static uint17 operator %(uint17 number, uint i)
+        public static uint operator %(uint17 number, uint i)
         {
-            return new uint17(Bit.uclip(bits, number.data % i));
+            return Bit.uclip(bits, number.data % i);
         }
 
         public uint17(uint i)

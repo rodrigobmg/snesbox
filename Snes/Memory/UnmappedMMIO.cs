@@ -1,15 +1,20 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
     class UnmappedMMIO : IMMIO
     {
         public static UnmappedMMIO mmio_unmapped = new UnmappedMMIO();
 
-        public byte mmio_read(uint addr)
+        public IEnumerable mmio_read(uint addr, Result result)
         {
-            return CPU.cpu.regs.mdr;
+            result.Value = CPU.cpu.regs.mdr;
+            yield break;
         }
 
-        public void mmio_write(uint addr, byte data) { }
+        public IEnumerable mmio_write(uint addr, byte data)
+        {
+            yield break;
+        }
     }
 }

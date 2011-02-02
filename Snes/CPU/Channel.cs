@@ -1,4 +1,4 @@
-﻿#if ACCURACY || COMPATIBILITY
+﻿#if !FAST_CPU
 using System.Runtime.InteropServices;
 using Nall;
 

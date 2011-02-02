@@ -10,9 +10,17 @@ namespace Snes
             [FieldOffset(0)]
             public ushort w;
 
-            [FieldOffset(0)]
-            public byte l;
+#if BIG_ENDIAN
             [FieldOffset(1)]
+#else
+            [FieldOffset(0)]
+#endif
+            public byte l;
+#if BIG_ENDIAN
+            [FieldOffset(0)]
+#else
+            [FieldOffset(1)]
+#endif
             public byte h;
 
             public static explicit operator uint(Reg16 reg16)

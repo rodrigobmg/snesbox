@@ -1,4 +1,4 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 using System;
 
 namespace Snes

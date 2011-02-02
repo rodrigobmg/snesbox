@@ -1,4 +1,4 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 using System;
 using Nall;
 
@@ -15,169 +15,75 @@ namespace Snes
             public enum Mode { BPP2, BPP4, BPP8, Mode7, Inactive }
             public enum ScreenSize { Size32x32, Size32x64, Size64x32, Size64x64 }
             public enum TileSize { Size8x8, Size16x16 }
-            public enum Screen { Main, Sub }
 
+            public T t = new T();
             public Regs regs = new Regs();
             public Output output = new Output();
 
-            public int x;
-            public int y;
-
-            public uint mosaic_vcounter;
-            public uint mosaic_voffset;
-            public uint mosaic_hcounter;
-            public uint mosaic_hoffset;
-
-            public uint mosaic_priority;
-            public byte mosaic_palette;
-            public ushort mosaic_tile;
-
-            public uint tile_counter;
-            public uint tile;
-            public uint priority;
-            public uint palette_number;
-            public uint palette_index;
-            public byte[] data = new byte[8];
-
-            public void frame()
-            {
-
-            }
-
             public void scanline()
             {
-                bool hires = (self.regs.bgmode == 5 || self.regs.bgmode == 6);
-                x = -7;
-                y = self.PPUCounter.vcounter();
-                tile_counter = (7 - (regs.hoffset & 7)) << Convert.ToInt32(hires);
-                for (uint n = 0; n < 8; n++) data[n] = 0;
-
                 if (self.PPUCounter.vcounter() == 1)
                 {
-                    mosaic_vcounter = regs.mosaic + 1;
-                    mosaic_voffset = 1;
+                    t.mosaic_y = 1;
+                    t.mosaic_countdown = 0;
                 }
-                else if (--mosaic_vcounter == 0)
+                else
                 {
-                    mosaic_vcounter = regs.mosaic + 1;
-                    mosaic_voffset += regs.mosaic + 1;
+                    if (!Convert.ToBoolean(regs.mosaic) || !Convert.ToBoolean(t.mosaic_countdown))
+                    {
+                        t.mosaic_y = self.PPUCounter.vcounter();
+                    }
+                    if (!Convert.ToBoolean(t.mosaic_countdown))
+                    {
+                        t.mosaic_countdown = regs.mosaic + 1;
+                    }
+                    t.mosaic_countdown--;
                 }
 
-                mosaic_hcounter = regs.mosaic + 1;
-                mosaic_hoffset = 0;
+                t.x = 0;
             }
 
-            public void run(bool screen)
+            public void run()
             {
-                if (self.PPUCounter.vcounter() == 0)
-                {
-                    return;
-                }
                 bool hires = (self.regs.bgmode == 5 || self.regs.bgmode == 6);
 
-                if (Convert.ToUInt32(screen) == (uint)Screen.Sub)
+                if ((self.PPUCounter.hcounter() & 2) == 0)
                 {
                     output.main.priority = 0;
                     output.sub.priority = 0;
-                    if (hires == false)
-                    {
-                        return;
-                    }
                 }
-
-                if (regs.mode == (uint)Mode.Inactive)
-                {
-                    return;
-                }
-                if (regs.main_enable == false && regs.sub_enable == false)
+                else if (hires == false)
                 {
                     return;
                 }
 
-                if (regs.mode == (uint)Mode.Mode7)
+                if (regs.mode == (int)Mode.Inactive)
                 {
-                    run_mode7();
                     return;
                 }
-
-                if (tile_counter-- == 0)
-                {
-                    tile_counter = 7;
-                    get_tile();
-                }
-
-                byte palette = (byte)get_tile_color();
-                if (x == 0)
-                {
-                    mosaic_hcounter = 1;
-                }
-                if (x >= 0 && --mosaic_hcounter == 0)
-                {
-                    mosaic_hcounter = regs.mosaic + 1;
-                    mosaic_priority = priority;
-                    mosaic_palette = (byte)(Convert.ToBoolean(palette) ? palette_index + palette : 0);
-                    mosaic_tile = (ushort)tile;
-                }
-                if (Convert.ToUInt32(screen) == (uint)Screen.Main)
-                {
-                    x++;
-                }
-                if (mosaic_palette == 0)
+                if (regs.main_enabled == false && regs.sub_enabled == false)
                 {
                     return;
                 }
 
-                if (hires == false)
+                uint x = t.x++;
+                uint y = t.mosaic_y;
+                if (regs.mode == (int)Mode.Mode7)
                 {
-                    if (regs.main_enable)
-                    {
-                        output.main.priority = mosaic_priority;
-                        output.main.palette = mosaic_palette;
-                        output.main.tile = mosaic_tile;
-                    }
-
-                    if (regs.sub_enable)
-                    {
-                        output.sub.priority = mosaic_priority;
-                        output.sub.palette = mosaic_palette;
-                        output.sub.tile = mosaic_tile;
-                    }
+                    run_mode7(x, y);
+                    return;
                 }
-                else if (Convert.ToUInt32(screen) == (uint)Screen.Main)
-                {
-                    if (regs.main_enable)
-                    {
-                        output.main.priority = mosaic_priority;
-                        output.main.palette = mosaic_palette;
-                        output.main.tile = mosaic_tile;
-                    }
-                }
-                else if (Convert.ToUInt32(screen) == (uint)Screen.Sub)
-                {
-                    if (regs.sub_enable)
-                    {
-                        output.sub.priority = mosaic_priority;
-                        output.sub.palette = mosaic_palette;
-                        output.sub.tile = mosaic_tile;
-                    }
-                }
-            }
 
-            public void get_tile()
-            {
-                bool hires = (self.regs.bgmode == 5 || self.regs.bgmode == 6);
-
-                uint color_depth = (uint)(regs.mode == (uint)Mode.BPP2 ? 0 : regs.mode == (uint)Mode.BPP4 ? 1 : 2);
+                uint color_depth = (regs.mode == (int)Mode.BPP2 ? 0U : regs.mode == (int)Mode.BPP4 ? 1U : 2U);
                 uint palette_offset = (self.regs.bgmode == 0 ? (id << 5) : 0);
-                uint palette_size = (uint)(2 << (int)color_depth);
-                uint tile_mask = (uint)(0x0fff >> (int)color_depth);
+                uint palette_size = (2U << (int)color_depth);
+                uint tile_mask = (0x0fffU >> (int)color_depth);
                 uint tiledata_index = regs.tiledata_addr >> (int)(4 + color_depth);
 
-                uint tile_height = (uint)(Convert.ToUInt32(regs.tile_size) == (uint)TileSize.Size8x8 ? 3 : 4);
+                uint tile_height = (Convert.ToInt32(regs.tile_size) == (int)TileSize.Size8x8 ? 3U : 4U);
                 uint tile_width = (!hires ? tile_height : 4);
 
-                uint width = (uint)(256 << Convert.ToInt32(hires));
-
+                uint width = (!hires ? 256U : 512U);
                 uint mask_x = (tile_height == 3 ? width : (width << 1));
                 uint mask_y = mask_x;
                 if (Convert.ToBoolean(regs.screen_size & 1))
@@ -191,9 +97,6 @@ namespace Snes
                 mask_x--;
                 mask_y--;
 
-                uint px = (uint)(x << Convert.ToInt32(hires));
-                uint py = (regs.mosaic == 0 ? (uint)y : mosaic_voffset);
-
                 uint hscroll = regs.hoffset;
                 uint vscroll = regs.voffset;
                 if (hires)
@@ -201,46 +104,46 @@ namespace Snes
                     hscroll <<= 1;
                     if (self.regs.interlace)
                     {
-                        py = (uint)((py << 1) + Convert.ToInt32(self.PPUCounter.field()));
+                        y = (uint)((y << 1) + Convert.ToInt32(self.PPUCounter.field()));
                     }
                 }
 
-                uint hoffset = hscroll + px;
-                uint voffset = vscroll + py;
+                uint hoffset = hscroll + mosaic_table[regs.mosaic, x];
+                uint voffset = vscroll + y;
 
                 if (self.regs.bgmode == 2 || self.regs.bgmode == 4 || self.regs.bgmode == 6)
                 {
-                    ushort offset_x = (ushort)(x + (hscroll & 7));
+                    ushort opt_x = (ushort)(x + (hscroll & 7));
 
-                    if (offset_x >= 8)
+                    if (opt_x >= 8)
                     {
-                        uint hval = self.bg3.get_tile((uint)((offset_x - 8) + (self.bg3.regs.hoffset & ~7)), self.bg3.regs.voffset + 0);
-                        uint vval = self.bg3.get_tile((uint)((offset_x - 8) + (self.bg3.regs.hoffset & ~7)), self.bg3.regs.voffset + 8);
-                        uint valid_mask = (uint)(id == (uint)ID.BG1 ? 0x2000 : 0x4000);
+                        uint hval = self.bg3.get_tile((uint)((opt_x - 8) + (self.bg3.regs.hoffset & ~7)), self.bg3.regs.voffset + 0);
+                        uint vval = self.bg3.get_tile((uint)((opt_x - 8) + (self.bg3.regs.hoffset & ~7)), self.bg3.regs.voffset + 8U);
+                        uint opt_valid_bit = (id == (int)ID.BG1 ? (uint)0x2000 : (uint)0x4000);
 
                         if (self.regs.bgmode == 4)
                         {
-                            if (Convert.ToBoolean(hval & valid_mask))
+                            if (Convert.ToBoolean(hval & opt_valid_bit))
                             {
-                                if ((hval & 0x8000) == 0)
+                                if (!Convert.ToBoolean(hval & 0x8000))
                                 {
-                                    hoffset = (uint)(offset_x + (hval & ~7));
+                                    hoffset = (uint)(opt_x + (hval & ~7));
                                 }
                                 else
                                 {
-                                    voffset = (uint)(y + hval);
+                                    voffset = y + hval;
                                 }
                             }
                         }
                         else
                         {
-                            if (Convert.ToBoolean(hval & valid_mask))
+                            if (Convert.ToBoolean(hval & opt_valid_bit))
                             {
-                                hoffset = (uint)(offset_x + (hval & ~7));
+                                hoffset = (uint)(opt_x + (hval & ~7));
                             }
-                            if (Convert.ToBoolean(vval & valid_mask))
+                            if (Convert.ToBoolean(vval & opt_valid_bit))
                             {
-                                voffset = (uint)(y + vval);
+                                voffset = y + vval;
                             }
                         }
                     }
@@ -249,115 +152,85 @@ namespace Snes
                 hoffset &= mask_x;
                 voffset &= mask_y;
 
-                uint screen_x = (uint)(Convert.ToBoolean(regs.screen_size & 1) ? 32 << 5 : 0);
-                uint screen_y = (uint)(Convert.ToBoolean(regs.screen_size & 2) ? 32 << 5 : 0);
-                if (regs.screen_size == 3)
-                {
-                    screen_y <<= 1;
-                }
-
-                uint tx = hoffset >> (int)tile_width;
-                uint ty = voffset >> (int)tile_height;
-
-                ushort offset = (ushort)(((ty & 0x1f) << 5) + (tx & 0x1f));
-                if (Convert.ToBoolean(tx & 0x20))
-                {
-                    offset += (ushort)screen_x;
-                }
-                if (Convert.ToBoolean(ty & 0x20))
-                {
-                    offset += (ushort)screen_y;
-                }
-
-                ushort addr = (ushort)(regs.screen_addr + (offset << 1));
-                tile = (uint)((StaticRAM.vram[(uint)(addr + 0)] << 0) + (StaticRAM.vram[(uint)(addr + 1)] << 8));
-                bool mirror_y = Convert.ToBoolean(tile & 0x8000);
-                bool mirror_x = Convert.ToBoolean(tile & 0x4000);
-                priority = (Convert.ToBoolean(tile & 0x2000) ? regs.priority1 : regs.priority0);
-                palette_number = (tile >> 10) & 7;
-                palette_index = palette_offset + (palette_number << (int)palette_size);
+                uint tile_number = get_tile(hoffset, voffset);
+                bool mirror_y = Convert.ToBoolean(tile_number & 0x8000);
+                bool mirror_x = Convert.ToBoolean(tile_number & 0x4000);
+                uint priority = (Convert.ToBoolean(tile_number & 0x2000) ? regs.priority1 : regs.priority0);
+                uint palette_number = (tile_number >> 10) & 7;
+                uint palette_index = palette_offset + (palette_number << (int)palette_size);
 
                 if (tile_width == 4 && Convert.ToBoolean(hoffset & 8) != mirror_x)
                 {
-                    tile += 1;
+                    tile_number += 1;
                 }
                 if (tile_height == 4 && Convert.ToBoolean(voffset & 8) != mirror_y)
                 {
-                    tile += 16;
+                    tile_number += 16;
                 }
-                ushort character = (ushort)(((tile & 0x03ff) + tiledata_index) & tile_mask);
+                tile_number &= 0x03ff;
+                tile_number += tiledata_index;
+                tile_number &= tile_mask;
 
+                if (mirror_x)
+                {
+                    hoffset ^= 7;
+                }
                 if (mirror_y)
                 {
                     voffset ^= 7;
                 }
-                offset = (ushort)((character << (int)(4 + color_depth)) + ((voffset & 7) << 1));
 
-                if (regs.mode >= (uint)Mode.BPP2)
+                byte color = (byte)get_color(hoffset, voffset, (ushort)tile_number);
+                if (color == 0)
                 {
-                    data[0] = StaticRAM.vram[(uint)(offset + 0)];
-                    data[1] = StaticRAM.vram[(uint)(offset + 1)];
-                }
-                if (regs.mode >= (uint)Mode.BPP4)
-                {
-                    data[2] = StaticRAM.vram[(uint)(offset + 16)];
-                    data[3] = StaticRAM.vram[(uint)(offset + 17)];
-                }
-                if (regs.mode >= (uint)Mode.BPP8)
-                {
-                    data[4] = StaticRAM.vram[(uint)(offset + 32)];
-                    data[5] = StaticRAM.vram[(uint)(offset + 33)];
-                    data[6] = StaticRAM.vram[(uint)(offset + 48)];
-                    data[7] = StaticRAM.vram[(uint)(offset + 49)];
+                    return;
                 }
 
-                if (mirror_x)
+                color += (byte)palette_index;
+
+                if (hires == false)
                 {
-                    for (uint n = 0; n < 8; n++)
+                    if (regs.main_enabled)
                     {
-                        //reverse data bits in data[n]: 01234567 -> 76543210
-                        data[n] = (byte)(((data[n] >> 4) & 0x0f) | ((data[n] << 4) & 0xf0));
-                        data[n] = (byte)(((data[n] >> 2) & 0x33) | ((data[n] << 2) & 0xcc));
-                        data[n] = (byte)(((data[n] >> 1) & 0x55) | ((data[n] << 1) & 0xaa));
+                        output.main.priority = priority;
+                        output.main.palette = color;
+                        output.main.tile = tile_number;
+                    }
+
+                    if (regs.sub_enabled)
+                    {
+                        output.sub.priority = priority;
+                        output.sub.palette = color;
+                        output.sub.tile = tile_number;
                     }
                 }
-            }
-
-            public uint get_tile_color()
-            {
-                uint color = 0;
-                if (regs.mode >= (uint)Mode.BPP2)
+                else
                 {
-                    color += Convert.ToBoolean(data[0] & 0x80) ? 0x01U : 0U;
-                    data[0] <<= 1;
-                    color += Convert.ToBoolean(data[1] & 0x80) ? 0x02U : 0U;
-                    data[1] <<= 1;
+                    if (Convert.ToBoolean(x & 1))
+                    {
+                        if (regs.main_enabled)
+                        {
+                            output.main.priority = priority;
+                            output.main.palette = color;
+                            output.main.tile = tile_number;
+                        }
+                    }
+                    else
+                    {
+                        if (regs.sub_enabled)
+                        {
+                            output.sub.priority = priority;
+                            output.sub.palette = color;
+                            output.sub.tile = tile_number;
+                        }
+                    }
                 }
-                if (regs.mode >= (uint)Mode.BPP4)
-                {
-                    color += Convert.ToBoolean(data[2] & 0x80) ? 0x04U : 0U;
-                    data[2] <<= 1;
-                    color += Convert.ToBoolean(data[3] & 0x80) ? 0x08U : 0U;
-                    data[3] <<= 1;
-                }
-                if (regs.mode >= (uint)Mode.BPP8)
-                {
-                    color += Convert.ToBoolean(data[4] & 0x80) ? 0x10U : 0U;
-                    data[4] <<= 1;
-                    color += Convert.ToBoolean(data[5] & 0x80) ? 0x20U : 0U;
-                    data[5] <<= 1;
-                    color += Convert.ToBoolean(data[6] & 0x80) ? 0x40U : 0U;
-                    data[6] <<= 1;
-                    color += Convert.ToBoolean(data[7] & 0x80) ? 0x80U : 0U;
-                    data[7] <<= 1;
-                }
-                return color;
             }
 
             public uint get_tile(uint x, uint y)
             {
                 bool hires = (self.regs.bgmode == 5 || self.regs.bgmode == 6);
-                uint tile_height = (Convert.ToUInt32(regs.tile_size) == (uint)TileSize.Size8x8 ? 3U : 4U);
+                uint tile_height = (Convert.ToInt32(regs.tile_size) == (int)TileSize.Size8x8 ? 3U : 4U);
                 uint tile_width = (!hires ? tile_height : 4);
                 uint width = (!hires ? 256U : 512U);
                 uint mask_x = (tile_height == 3 ? width : (width << 1));
@@ -373,8 +246,8 @@ namespace Snes
                 mask_x--;
                 mask_y--;
 
-                uint screen_x = (uint)(Convert.ToBoolean(regs.screen_size & 1) ? (32 << 5) : 0);
-                uint screen_y = (uint)(Convert.ToBoolean(regs.screen_size & 2) ? (32 << 5) : 0);
+                uint screen_x = (Convert.ToBoolean(regs.screen_size & 1) ? (32U << 5) : 0U);
+                uint screen_y = (Convert.ToBoolean(regs.screen_size & 2) ? (32U << 5) : 0U);
                 if (regs.screen_size == 3)
                 {
                     screen_y <<= 1;
@@ -383,22 +256,82 @@ namespace Snes
                 x = (x & mask_x) >> (int)tile_width;
                 y = (y & mask_y) >> (int)tile_height;
 
-                ushort offset = (ushort)(((y & 0x1f) << 5) + (x & 0x1f));
+                ushort pos = (ushort)(((y & 0x1f) << 5) + (x & 0x1f));
                 if (Convert.ToBoolean(x & 0x20))
                 {
-                    offset += (ushort)screen_x;
+                    pos += (ushort)screen_x;
                 }
                 if (Convert.ToBoolean(y & 0x20))
                 {
-                    offset += (ushort)screen_y;
+                    pos += (ushort)screen_y;
                 }
 
-                ushort addr = (ushort)(regs.screen_addr + (offset << 1));
-                return (uint)((StaticRAM.vram[(uint)(addr + 0)] << 0) + (StaticRAM.vram[(uint)(addr + 1)] << 8));
+                ushort addr = (ushort)(regs.screen_addr + (pos << 1));
+                return (uint)(StaticRAM.vram[addr + 0U] + (StaticRAM.vram[addr + 1U] << 8));
+            }
+
+            public uint get_color(uint x, uint y, ushort offset)
+            {
+                uint mask = (uint)(0x80 >> (int)(x & 7));
+
+                switch ((Background.Mode)regs.mode)
+                {
+                    case Background.Mode.BPP2:
+                        {
+                            offset = (ushort)((offset * 16) + ((y & 7) * 2));
+
+                            uint d0 = StaticRAM.vram[offset + 0U];
+                            uint d1 = StaticRAM.vram[offset + 1U];
+
+                            return ((Bit.ToBit(d0 & mask)) << 0)
+                                + ((Bit.ToBit(d1 & mask)) << 1);
+                        }
+                    case Background.Mode.BPP4:
+                        {
+                            offset = (ushort)((offset * 32) + ((y & 7) * 2));
+
+                            uint d0 = StaticRAM.vram[offset + 0U];
+                            uint d1 = StaticRAM.vram[offset + 1U];
+                            uint d2 = StaticRAM.vram[offset + 16U];
+                            uint d3 = StaticRAM.vram[offset + 17U];
+
+                            return ((Bit.ToBit(d0 & mask)) << 0)
+                                + ((Bit.ToBit(d1 & mask)) << 1)
+                                + ((Bit.ToBit(d2 & mask)) << 2)
+                                + ((Bit.ToBit(d3 & mask)) << 3);
+                        }
+                    case Background.Mode.BPP8:
+                        {
+                            offset = (ushort)((offset * 64) + ((y & 7) * 2));
+
+                            uint d0 = StaticRAM.vram[offset + 0U];
+                            uint d1 = StaticRAM.vram[offset + 1U];
+                            uint d2 = StaticRAM.vram[offset + 16U];
+                            uint d3 = StaticRAM.vram[offset + 17U];
+                            uint d4 = StaticRAM.vram[offset + 32U];
+                            uint d5 = StaticRAM.vram[offset + 33U];
+                            uint d6 = StaticRAM.vram[offset + 48U];
+                            uint d7 = StaticRAM.vram[offset + 49U];
+
+                            return ((Bit.ToBit(d0 & mask)) << 0)
+                                + ((Bit.ToBit(d1 & mask)) << 1)
+                                + ((Bit.ToBit(d2 & mask)) << 2)
+                                + ((Bit.ToBit(d3 & mask)) << 3)
+                                + ((Bit.ToBit(d4 & mask)) << 4)
+                                + ((Bit.ToBit(d5 & mask)) << 5)
+                                + ((Bit.ToBit(d6 & mask)) << 6)
+                                + ((Bit.ToBit(d7 & mask)) << 7);
+                        }
+                    default:
+                        throw new InvalidOperationException();
+                }
             }
 
             public void reset()
             {
+                t.x = 0;
+                t.mosaic_y = 0;
+                t.mosaic_countdown = 0;
                 regs.tiledata_addr = 0;
                 regs.screen_addr = 0;
                 regs.screen_size = 0;
@@ -407,42 +340,23 @@ namespace Snes
                 regs.mode = 0;
                 regs.priority0 = 0;
                 regs.priority1 = 0;
-                regs.main_enable = Convert.ToBoolean(0);
-                regs.sub_enable = Convert.ToBoolean(0);
+                regs.main_enabled = Convert.ToBoolean(0);
+                regs.sub_enabled = Convert.ToBoolean(0);
                 regs.hoffset = 0;
                 regs.voffset = 0;
-
                 output.main.palette = 0;
                 output.main.priority = 0;
                 output.sub.palette = 0;
                 output.sub.priority = 0;
-
-                x = 0;
-                y = 0;
-
-                mosaic_vcounter = 0;
-                mosaic_voffset = 0;
-                mosaic_hcounter = 0;
-                mosaic_hoffset = 0;
-
-                mosaic_priority = 0;
-                mosaic_palette = 0;
-                mosaic_tile = 0;
-
-                tile_counter = 0;
-                tile = 0;
-                priority = 0;
-                palette_number = 0;
-                palette_index = 0;
-                for (uint n = 0; n < 8; n++)
-                {
-                    data[n] = 0;
-                }
             }
 
             public void serialize(Serializer s)
             {
                 s.integer(id, "id");
+
+                s.integer(t.x, "t.x");
+                s.integer(t.mosaic_y, "t.mosaic_y");
+                s.integer(t.mosaic_countdown, "t.mosaic_countdown");
 
                 s.integer(regs.tiledata_addr, "regs.tiledata_addr");
                 s.integer(regs.screen_addr, "regs.screen_addr");
@@ -454,8 +368,8 @@ namespace Snes
                 s.integer(regs.priority0, "regs.priority0");
                 s.integer(regs.priority1, "regs.priority1");
 
-                s.integer(regs.main_enable, "regs.main_enabled");
-                s.integer(regs.sub_enable, "regs.sub_enabled");
+                s.integer(regs.main_enabled, "regs.main_enabled");
+                s.integer(regs.sub_enabled, "regs.sub_enabled");
 
                 s.integer(regs.hoffset, "regs.hoffset");
                 s.integer(regs.voffset, "regs.voffset");
@@ -467,39 +381,30 @@ namespace Snes
                 s.integer(output.sub.priority, "output.sub.priority");
                 s.integer(output.sub.palette, "output.sub.palette");
                 s.integer(output.sub.tile, "output.sub.tile");
-
-                s.integer(x, "x");
-                s.integer(y, "y");
-
-                s.integer(mosaic_vcounter, "mosaic_vcounter");
-                s.integer(mosaic_voffset, "mosaic_voffset");
-                s.integer(mosaic_hcounter, "mosaic_hcounter");
-                s.integer(mosaic_hoffset, "mosaic_hoffset");
-
-                s.integer(mosaic_priority, "mosaic_priority");
-                s.integer(mosaic_palette, "mosaic_palette");
-                s.integer(mosaic_tile, "mosaic_tile");
-
-                s.integer(tile_counter, "tile_counter");
-                s.integer(tile, "tile");
-                s.integer(priority, "priority");
-                s.integer(palette_number, "palette_number");
-                s.integer(palette_index, "palette_index");
-                s.array(data, "data");
             }
 
             public Background(PPU self_, uint id_)
             {
                 self = self_;
                 id = id_;
+
+                for (uint m = 0; m < 16; m++)
+                {
+                    for (uint x = 0; x < 4096; x++)
+                    {
+                        mosaic_table[m, x] = (ushort)((x / (m + 1)) * (m + 1));
+                    }
+                }
             }
+
+            private static ushort[,] mosaic_table = new ushort[16, 4096];
 
             private int clip(int n)
             {   //13-bit sign extend: --s---nnnnnnnnnn -> ssssssnnnnnnnnnn
                 return Convert.ToBoolean(n & 0x2000) ? (n | ~1023) : (n & 1023);
             }
 
-            private void run_mode7()
+            private void run_mode7(uint x, uint y)
             {
                 int a = Bit.sclip(16, self.regs.m7a);
                 int b = Bit.sclip(16, self.regs.m7b);
@@ -511,19 +416,6 @@ namespace Snes
                 int hoffset = Bit.sclip(13, self.regs.mode7_hoffset);
                 int voffset = Bit.sclip(13, self.regs.mode7_voffset);
 
-                if (Convert.ToBoolean(this.x++ & ~255))
-                {
-                    return;
-                }
-                uint x = mosaic_hoffset;
-                uint y = self.bg1.mosaic_voffset;  //BG2 vertical mosaic uses BG1 mosaic size
-
-                if (--mosaic_hcounter == 0)
-                {
-                    mosaic_hcounter = regs.mosaic + 1;
-                    mosaic_hoffset += regs.mosaic + 1;
-                }
-
                 if (self.regs.mode7_hflip)
                 {
                     x = 255 - x;
@@ -533,11 +425,24 @@ namespace Snes
                     y = 255 - y;
                 }
 
-                int psx = (int)(((a * clip(hoffset - cx)) & ~63) + ((b * clip(voffset - cy)) & ~63) + ((b * y) & ~63) + (cx << 8));
-                int psy = (int)(((c * clip(hoffset - cx)) & ~63) + ((d * clip(voffset - cy)) & ~63) + ((d * y) & ~63) + (cy << 8));
+                uint mosaic_x = 0;
+                uint mosaic_y = 0;
+                if (id == (int)ID.BG1)
+                {
+                    mosaic_x = mosaic_table[self.bg1.regs.mosaic, x];
+                    mosaic_y = mosaic_table[self.bg1.regs.mosaic, y];
+                }
+                else if (id == (int)ID.BG2)
+                {
+                    mosaic_x = mosaic_table[self.bg2.regs.mosaic, x];
+                    mosaic_y = mosaic_table[self.bg1.regs.mosaic, y];  //BG2 vertical mosaic uses BG1 mosaic size
+                }
 
-                int px = (int)(psx + (a * x));
-                int py = (int)(psy + (c * x));
+                int psx = (int)(((a * clip(hoffset - cx)) & ~63) + ((b * clip(voffset - cy)) & ~63) + ((b * mosaic_y) & ~63) + (cx << 8));
+                int psy = (int)(((c * clip(hoffset - cx)) & ~63) + ((d * clip(voffset - cy)) & ~63) + ((d * mosaic_y) & ~63) + (cy << 8));
+
+                int px = (int)(psx + (a * mosaic_x));
+                int py = (int)(psy + (c * mosaic_x));
 
                 //mask pseudo-FP bits
                 px >>= 8;
@@ -555,12 +460,12 @@ namespace Snes
                             py &= 1023;
                             tile = StaticRAM.vram[(uint)(((py >> 3) * 128 + (px >> 3)) << 1)];
                             palette = StaticRAM.vram[(uint)((((tile << 6) + ((py & 7) << 3) + (px & 7)) << 1) + 1)];
-                            break;
                         }
+                        break;
                     //palette color 0 outside of screen area
                     case 2:
                         {
-                            if (Convert.ToBoolean((px | py) & ~1023))
+                            if (px < 0 || px > 1023 || py < 0 || py > 1023)
                             {
                                 palette = 0;
                             }
@@ -571,12 +476,12 @@ namespace Snes
                                 tile = StaticRAM.vram[(uint)(((py >> 3) * 128 + (px >> 3)) << 1)];
                                 palette = StaticRAM.vram[(uint)((((tile << 6) + ((py & 7) << 3) + (px & 7)) << 1) + 1)];
                             }
-                            break;
                         }
+                        break;
                     //character 0 repetition outside of screen area
                     case 3:
                         {
-                            if (Convert.ToBoolean((px | py) & ~1023))
+                            if (px < 0 || px > 1023 || py < 0 || py > 1023)
                             {
                                 tile = 0;
                             }
@@ -587,8 +492,8 @@ namespace Snes
                                 tile = StaticRAM.vram[(uint)(((py >> 3) * 128 + (px >> 3)) << 1)];
                             }
                             palette = StaticRAM.vram[(uint)((((tile << 6) + ((py & 7) << 3) + (px & 7)) << 1) + 1)];
-                            break;
                         }
+                        break;
                 }
 
                 uint priority = 0;
@@ -607,18 +512,16 @@ namespace Snes
                     return;
                 }
 
-                if (regs.main_enable)
+                if (regs.main_enabled)
                 {
-                    output.main.palette = (byte)palette;
+                    output.main.palette = palette;
                     output.main.priority = priority;
-                    output.main.tile = 0;
                 }
 
-                if (regs.sub_enable)
+                if (regs.sub_enabled)
                 {
-                    output.sub.palette = (byte)palette;
+                    output.sub.palette = palette;
                     output.sub.priority = priority;
-                    output.main.tile = 0;
                 }
             }
         }

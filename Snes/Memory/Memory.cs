@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
     abstract class Memory
@@ -8,7 +9,7 @@ namespace Snes
             return 0;
         }
 
-        public abstract byte read(uint addr);
-        public abstract void write(uint addr, byte data);
+        public abstract IEnumerable read(uint addr, Result result);
+        public abstract IEnumerable write(uint addr, byte data);
     }
 }

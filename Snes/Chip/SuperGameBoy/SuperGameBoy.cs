@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Nall;
 
 namespace Snes
@@ -12,11 +13,11 @@ namespace Snes
         public void save() { throw new NotImplementedException(); }
 
         public IMMIO[] mmio = new IMMIO[3];
-        public byte mmio_read(uint addr) { throw new NotImplementedException(); }
-        public void mmio_write(uint addr, byte data) { throw new NotImplementedException(); }
+        public IEnumerable mmio_read(uint addr, Result result) { throw new NotImplementedException(); }
+        public IEnumerable mmio_write(uint addr, byte data) { throw new NotImplementedException(); }
 
-        public override byte read(uint addr) { throw new NotImplementedException(); }
-        public override void write(uint addr, byte data) { throw new NotImplementedException(); }
+        public override IEnumerable read(uint addr, Result result) { throw new NotImplementedException(); }
+        public override IEnumerable write(uint addr, byte data) { throw new NotImplementedException(); }
 
         public void init() {  /*throw new NotImplementedException();*/  }
         public void enable() { throw new NotImplementedException(); }

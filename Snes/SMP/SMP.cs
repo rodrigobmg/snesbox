@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Nall;
 
 namespace Snes
@@ -13,17 +14,17 @@ namespace Snes
             DSP.dsp.Processor.clock -= clocks;
         }
 
-        public void synchronize_cpu()
+        public IEnumerable synchronize_cpu()
         {
             if (Processor.clock >= 0 && Scheduler.scheduler.sync != Scheduler.SynchronizeMode.All)
             {
-                Libco.Switch(CPU.cpu.Processor.thread);
+                yield return CPU.cpu.Processor.thread;
             }
         }
 
         public void synchronize_dsp()
         {
-#if ACCURACY
+#if !FAST_DSP
             if (DSP.dsp.Processor.clock < 0 && Scheduler.scheduler.sync != Scheduler.SynchronizeMode.All)
             {
                 Libco.Switch(DSP.dsp.Processor.thread);
@@ -46,31 +47,37 @@ namespace Snes
             StaticRAM.apuram[0xf4 + (uint)port] = data;
         }
 
-        public void enter()
+        public IEnumerable enter()
         {
             while (true)
             {
                 if (Scheduler.scheduler.sync == Scheduler.SynchronizeMode.All)
                 {
-                    Scheduler.scheduler.exit(Scheduler.ExitReason.SynchronizeEvent);
+                    yield return Scheduler.ExitReason.SynchronizeEvent;
                 }
 
-                op_step();
+                foreach (var e in op_step())
+                {
+                    yield return e;
+                };
             }
         }
 
-        public void power()
+        public IEnumerable power()
         {   //targets not initialized/changed upon reset
             t0.target = 0;
             t1.target = 0;
             t2.target = 0;
 
-            reset();
+            foreach (var e in reset())
+            {
+                yield return e;
+            };
         }
 
-        public void reset()
+        public IEnumerable reset()
         {
-            Processor.create("SMP", Enter, System.system.apu_frequency);
+            Processor.create(enter(), System.system.apu_frequency);
 
             regs.pc = 0xffc0;
             regs.a.Array[regs.a.Offset] = 0x00;
@@ -81,7 +88,10 @@ namespace Snes
 
             for (uint i = 0; i < StaticRAM.apuram.size(); i++)
             {
-                StaticRAM.apuram.write(i, 0x00);
+                foreach (var e in StaticRAM.apuram.write(i, 0x00))
+                {
+                    yield return e;
+                };
             }
 
             status.clock_counter = 0;
@@ -202,7 +212,7 @@ namespace Snes
             }
         }
 
-        private byte op_busread(ushort addr)
+        private IEnumerable op_busread(ushort addr, Result result)
         {
             byte r = default(byte);
             if ((addr & 0xfff0) == 0x00f0)
@@ -235,8 +245,11 @@ namespace Snes
                     case 0xf6:    //CPUIO2
                     case 0xf7:
                         {  //CPUIO3
-                            synchronize_cpu();
-#if PERFORMANCE
+                            foreach (var e in synchronize_cpu())
+                            {
+                                yield return e;
+                            };
+#if FAST_CPU
                             r = CPU.cpu.port_read((byte)addr);
 #else
                             r = CPU.cpu.port_read(new uint2(addr));
@@ -284,10 +297,10 @@ namespace Snes
                 r = ram_read(addr);
             }
 
-            return r;
+            result.Value = r;
         }
 
-        private void op_buswrite(ushort addr, byte data)
+        private IEnumerable op_buswrite(ushort addr, byte data)
         {
             if ((addr & 0xfff0) == 0x00f0)
             {  //$00f0-00ff
@@ -321,10 +334,13 @@ namespace Snes
                             {
                                 //one-time clearing of APU port read registers,
                                 //emulated by simulating CPU writes of 0x00
-                                synchronize_cpu();
+                                foreach (var e in synchronize_cpu())
+                                {
+                                    yield return e;
+                                };
                                 if (Convert.ToBoolean(data & 0x20))
                                 {
-#if PERFORMANCE
+#if FAST_CPU
                                     CPU.cpu.port_write(2, 0x00);
                                     CPU.cpu.port_write(3, 0x00);
 #else
@@ -334,7 +350,7 @@ namespace Snes
                                 }
                                 if (Convert.ToBoolean(data & 0x10))
                                 {
-#if PERFORMANCE
+#if FAST_CPU
                                     CPU.cpu.port_write(0, 0x00);
                                     CPU.cpu.port_write(1, 0x00);
 #else
@@ -383,7 +399,10 @@ namespace Snes
                     case 0xf6:    //CPUIO2
                     case 0xf7:
                         {  //CPUIO3
-                            synchronize_cpu();
+                            foreach (var e in synchronize_cpu())
+                            {
+                                yield return e;
+                            };
                             port_write(new uint2(addr), data);
                         } break;
                     case 0xf8:
@@ -419,33 +438,59 @@ namespace Snes
             ram_write(addr, data);
         }
 
-        public override void op_io()
+        public override IEnumerable op_io()
         {
-            add_clocks(24);
-            cycle_edge();
+            foreach (var e in add_clocks(24))
+            {
+                yield return e;
+            };
+            foreach (var e in cycle_edge())
+            {
+                yield return e;
+            };
         }
 
-        public override byte op_read(ushort addr)
+        public override IEnumerable op_read(ushort addr, Result result)
         {
-            add_clocks(12);
-            byte r = op_busread(addr);
-            add_clocks(12);
-            cycle_edge();
-            return r;
+            foreach (var e in add_clocks(12))
+            {
+                yield return e;
+            };
+            foreach (var e in op_busread(addr, result))
+            {
+                yield return e;
+            };
+            foreach (var e in add_clocks(12))
+            {
+                yield return e;
+            };
+            foreach (var e in cycle_edge())
+            {
+                yield return e;
+            };
         }
 
-        public override void op_write(ushort addr, byte data)
+        public override IEnumerable op_write(ushort addr, byte data)
         {
-            add_clocks(24);
-            op_buswrite(addr, data);
-            cycle_edge();
+            foreach (var e in add_clocks(24))
+            {
+                yield return e;
+            };
+            foreach (var e in op_buswrite(addr, data))
+            {
+                yield return e;
+            };
+            foreach (var e in cycle_edge())
+            {
+                yield return e;
+            };
         }
 
         private sSMPTimer t0 = new sSMPTimer(192);
         private sSMPTimer t1 = new sSMPTimer(192);
         private sSMPTimer t2 = new sSMPTimer(24);
 
-        private void add_clocks(uint clocks)
+        private IEnumerable add_clocks(uint clocks)
         {
             step(clocks);
             synchronize_dsp();
@@ -454,11 +499,14 @@ namespace Snes
             //sync if S-SMP is more than 24 samples ahead of S-CPU
             if (Processor.clock > +(768 * 24 * (long)24000000))
             {
-                synchronize_cpu();
+                foreach (var e in synchronize_cpu())
+                {
+                    yield return e;
+                };
             }
         }
 
-        private void cycle_edge()
+        private IEnumerable cycle_edge()
         {
             t0.tick();
             t1.tick();
@@ -471,15 +519,24 @@ namespace Snes
                 case 0:
                     break;                       //100% speed
                 case 1:
-                    add_clocks(24);
+                    foreach (var e in add_clocks(24))
+                    {
+                        yield return e;
+                    };
                     break;       // 50% speed
                 case 2:
                     while (true)
                     {
-                        add_clocks(24);  //  0% speed -- locks S-SMP
+                        foreach (var e in add_clocks(24))
+                        {
+                            yield return e;
+                        };  //  0% speed -- locks S-SMP
                     }
                 case 3:
-                    add_clocks(24 * 9);
+                    foreach (var e in add_clocks(24 * 9))
+                    {
+                        yield return e;
+                    };
                     break;   // 10% speed
             }
         }
@@ -534,14 +591,16 @@ namespace Snes
 
         private Status status = new Status();
 
-        private static void Enter()
+        private IEnumerable op_step()
         {
-            SMP.smp.enter();
-        }
-
-        private void op_step()
-        {
-            this.opcode_table[op_readpc()].Invoke();
+            foreach (var e in op_readpc(_result))
+            {
+                yield return e;
+            };
+            foreach (var e in this.opcode_table[_result.Value].Invoke())
+            {
+                yield return e;
+            };
         }
 
         private Processor _processor = new Processor();

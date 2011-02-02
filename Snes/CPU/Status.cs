@@ -1,4 +1,4 @@
-﻿#if ACCURACY || COMPATIBILITY
+﻿#if !FAST_CPU
 using Nall;
 
 namespace Snes
@@ -52,7 +52,7 @@ namespace Snes
             public byte[] port = new byte[4];
 
             //$2181-$2183
-            public uint17 wram_addr;
+            public uint17 wram_addr = new uint17();
 
             //$4016-$4017
             public bool joypad_strobe_latch;
@@ -76,8 +76,8 @@ namespace Snes
             public byte wrdivb;
 
             //$4207-$420a
-            public uint9 hirq_pos;
-            public uint9 virq_pos;
+            public uint10 hirq_pos = new uint10();
+            public uint10 virq_pos = new uint10();
 
             //$420d
             public uint rom_speed;

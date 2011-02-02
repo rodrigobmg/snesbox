@@ -1,4 +1,4 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 using System;
 using Nall;
 
@@ -54,28 +54,25 @@ namespace Snes
                 }
 
                 scanline();
-                add_clocks(60);
+                add_clocks(88);
 
                 if (PPUCounter.vcounter() <= (!regs.overscan ? 224 : 239))
                 {
-                    for (int pixel = -7; pixel <= 255; pixel++)
+                    for (uint n = 0; n < 256; n++)
                     {
-                        bg1.run(Convert.ToBoolean(1));
-                        bg2.run(Convert.ToBoolean(1));
-                        bg3.run(Convert.ToBoolean(1));
-                        bg4.run(Convert.ToBoolean(1));
+                        bg1.run();
+                        bg2.run();
+                        bg3.run();
+                        bg4.run();
                         add_clocks(2);
 
-                        bg1.run(Convert.ToBoolean(0));
-                        bg2.run(Convert.ToBoolean(0));
-                        bg3.run(Convert.ToBoolean(0));
-                        bg4.run(Convert.ToBoolean(0));
-                        if (pixel >= 0)
-                        {
-                            oam.run();
-                            window.run();
-                            screen.run();
-                        }
+                        bg1.run();
+                        bg2.run();
+                        bg3.run();
+                        bg4.run();
+                        oam.run();
+                        window.run();
+                        screen.run();
                         add_clocks(2);
                     }
 
@@ -84,10 +81,10 @@ namespace Snes
                 }
                 else
                 {
-                    add_clocks(1052 + 22 + 136);
+                    add_clocks(1024 + 22 + 136);
                 }
 
-                add_clocks(PPUCounter.lineclocks() - 60U - 1052U - 22U - 136U);
+                add_clocks(PPUCounter.lineclocks() - 88U - 1024U - 22U - 136U);
             }
         }
 
@@ -144,14 +141,14 @@ namespace Snes
             s.integer(regs.latch_hcounter, "regs.latch_hcounter");
             s.integer(regs.latch_vcounter, "regs.latch_vcounter");
 
-            s.integer((uint)regs.oam_iaddr, "regs.ioamaddr");
-            s.integer((uint)regs.cgram_iaddr, "regs.icgramaddr");
+            s.integer(regs.ioamaddr, "regs.ioamaddr");
+            s.integer(regs.icgramaddr, "regs.icgramaddr");
 
-            s.integer(regs.display_disable, "regs.display_disabled");
+            s.integer(regs.display_disabled, "regs.display_disabled");
             s.integer(regs.display_brightness, "regs.display_brightness");
 
-            s.integer((uint)regs.oam_baseaddr, "regs.oam_baseaddr");
-            s.integer((uint)regs.oam_addr, "regs.oam_addr");
+            s.integer(regs.oam_baseaddr, "regs.oam_baseaddr");
+            s.integer(regs.oam_addr, "regs.oam_addr");
             s.integer(regs.oam_priority, "regs.oam_priority");
 
             s.integer(regs.bg3_priority, "regs.bg3_priority");
@@ -177,7 +174,7 @@ namespace Snes
             s.integer(regs.m7x, "regs.m7x");
             s.integer(regs.m7y, "regs.m7y");
 
-            s.integer((uint)regs.cgram_addr, "regs.cgram_addr");
+            s.integer(regs.cgram_addr, "regs.cgram_addr");
 
             s.integer(regs.mode7_extbg, "regs.mode7_extbg");
             s.integer(regs.pseudo_hires, "regs.pseudo_hires");
@@ -234,7 +231,7 @@ namespace Snes
 
         private byte vram_read(uint addr)
         {
-            if (regs.display_disable || PPUCounter.vcounter() >= (!regs.overscan ? 225 : 240))
+            if (regs.display_disabled || PPUCounter.vcounter() >= (!regs.overscan ? 225 : 240))
             {
                 return StaticRAM.vram[addr];
             }
@@ -243,10 +240,47 @@ namespace Snes
 
         private void vram_write(uint addr, byte data)
         {
-            if (regs.display_disable || PPUCounter.vcounter() >= (!regs.overscan ? 225 : 240))
+            if (regs.display_disabled || PPUCounter.vcounter() >= (!regs.overscan ? 225 : 240))
             {
                 StaticRAM.vram[addr] = data;
             }
+        }
+
+        private byte oam_read(uint addr)
+        {
+            if (!regs.display_disabled && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240))
+            {
+                addr = regs.ioamaddr;
+            }
+            if (Convert.ToBoolean(addr & 0x0200))
+            {
+                addr &= 0x021f;
+            }
+            return StaticRAM.oam[addr];
+        }
+
+        private void oam_write(uint addr, byte data)
+        {
+            if (!regs.display_disabled && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240))
+            {
+                addr = regs.ioamaddr;
+            }
+            if (Convert.ToBoolean(addr & 0x0200))
+            {
+                addr &= 0x021f;
+            }
+            StaticRAM.oam[addr] = data;
+            oam.update(addr, data);
+        }
+
+        private byte cgram_read(uint addr)
+        {
+            return StaticRAM.cgram[addr];
+        }
+
+        private void cgram_write(uint addr, byte data)
+        {
+            StaticRAM.cgram[addr] = data;
         }
 
         private void mmio_update_video_mode()
@@ -422,11 +456,11 @@ namespace Snes
 
         private void mmio_w2100(byte data)
         {
-            if (regs.display_disable && PPUCounter.vcounter() == (!regs.overscan ? 225 : 240))
+            if (regs.display_disabled && PPUCounter.vcounter() == (!regs.overscan ? 225 : 240))
             {
                 oam.address_reset();
             }
-            regs.display_disable = Convert.ToBoolean(data & 0x80);
+            regs.display_disabled = Convert.ToBoolean(data & 0x80);
             regs.display_brightness = (uint)(data & 0x0f);
         }  //INIDISP
 
@@ -439,44 +473,37 @@ namespace Snes
 
         private void mmio_w2102(byte data)
         {
-            regs.oam_baseaddr.Assign((uint)((regs.oam_baseaddr & 0x0200) | (uint)(data << 1)));
+            regs.oam_baseaddr &= 0x0100;
+            regs.oam_baseaddr |= (ushort)(data << 0);
             oam.address_reset();
         }  //OAMADDL
 
         private void mmio_w2103(byte data)
         {
             regs.oam_priority = Convert.ToBoolean(data & 0x80);
-            regs.oam_baseaddr.Assign((uint)((uint)((data & 0x01) << 9) | (uint)(regs.oam_baseaddr & 0x01fe)));
+            regs.oam_baseaddr &= 0x00ff;
+            regs.oam_baseaddr |= (ushort)((data & 1) << 8);
             oam.address_reset();
         }  //OAMADDH
 
         private void mmio_w2104(byte data)
         {
-            bool latch = Convert.ToBoolean((uint)(regs.oam_addr & 1));
-            uint10 addr = regs.oam_addr++;
-            if (regs.display_disable == false && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240))
+            if (Convert.ToBoolean(regs.oam_addr & 0x0200))
             {
-                addr = regs.oam_iaddr;
+                oam_write(regs.oam_addr, data);
             }
-            if (Convert.ToBoolean((uint)(addr & 0x0200)))
-            {
-                addr &= 0x021f;
-            }
-
-            if (latch == Convert.ToBoolean(0))
+            else if ((regs.oam_addr & 1) == 0)
             {
                 regs.oam_latchdata = data;
             }
-            if (Convert.ToBoolean((uint)(addr & 0x0200)))
+            else
             {
-                oam.update((uint)addr, data);
+                oam_write((uint)((regs.oam_addr & ~1) + 0), regs.oam_latchdata);
+                oam_write((uint)((regs.oam_addr & ~1) + 1), data);
             }
-            else if (latch == Convert.ToBoolean(1))
-            {
-                oam.update((uint)(((uint)addr & ~1) + 0), regs.oam_latchdata);
-                oam.update((uint)(((uint)addr & ~1) + 1), data);
-            }
-            oam.set_first_sprite();
+
+            regs.oam_addr = (ushort)((regs.oam_addr + 1) & 0x03ff);
+            oam.regs.first_sprite = (byte)(regs.oam_priority == false ? 0 : (regs.oam_addr >> 2) & 127);
         }  //OAMDATA
 
         private void mmio_w2105(byte data)
@@ -693,27 +720,21 @@ namespace Snes
 
         private void mmio_w2121(byte data)
         {
-            regs.cgram_addr.Assign((uint)(data << 1));
+            regs.cgram_addr = (ushort)(data << 1);
         }  //CGADD
 
         private void mmio_w2122(byte data)
         {
-            bool latch = Convert.ToBoolean((uint)(regs.cgram_addr & 1));
-            uint9 addr = regs.cgram_addr++;
-            if (regs.display_disable == false && PPUCounter.vcounter() > 0 && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240) && PPUCounter.hcounter() >= 88 && PPUCounter.hcounter() < 1096)
-            {
-                addr = regs.cgram_iaddr;
-            }
-
-            if (latch == Convert.ToBoolean(0))
+            if ((regs.cgram_addr & 1) == 0)
             {
                 regs.cgram_latchdata = data;
             }
             else
             {
-                StaticRAM.cgram[(uint)(addr & Bit.ToUint32(~1)) + 0] = regs.cgram_latchdata;
-                StaticRAM.cgram[(uint)(addr & Bit.ToUint32(~1)) + 1] = (byte)(data & 0x7f);
+                cgram_write((uint)((regs.cgram_addr & ~1) + 0), regs.cgram_latchdata);
+                cgram_write((uint)((regs.cgram_addr & ~1) + 1), (byte)(data & 0x7f));
             }
+            regs.cgram_addr = (ushort)((regs.cgram_addr + 1) & 0x01ff);
         }  //CGDATA
 
         private void mmio_w2123(byte data)
@@ -788,20 +809,20 @@ namespace Snes
 
         private void mmio_w212c(byte data)
         {
-            oam.regs.main_enable = Convert.ToBoolean(data & 0x10);
-            bg4.regs.main_enable = Convert.ToBoolean(data & 0x08);
-            bg3.regs.main_enable = Convert.ToBoolean(data & 0x04);
-            bg2.regs.main_enable = Convert.ToBoolean(data & 0x02);
-            bg1.regs.main_enable = Convert.ToBoolean(data & 0x01);
+            oam.regs.main_enabled = Convert.ToBoolean(data & 0x10);
+            bg4.regs.main_enabled = Convert.ToBoolean(data & 0x08);
+            bg3.regs.main_enabled = Convert.ToBoolean(data & 0x04);
+            bg2.regs.main_enabled = Convert.ToBoolean(data & 0x02);
+            bg1.regs.main_enabled = Convert.ToBoolean(data & 0x01);
         }  //TM
 
         private void mmio_w212d(byte data)
         {
-            oam.regs.sub_enable = Convert.ToBoolean(data & 0x10);
-            bg4.regs.sub_enable = Convert.ToBoolean(data & 0x08);
-            bg3.regs.sub_enable = Convert.ToBoolean(data & 0x04);
-            bg2.regs.sub_enable = Convert.ToBoolean(data & 0x02);
-            bg1.regs.sub_enable = Convert.ToBoolean(data & 0x01);
+            oam.regs.sub_enabled = Convert.ToBoolean(data & 0x10);
+            bg4.regs.sub_enabled = Convert.ToBoolean(data & 0x08);
+            bg3.regs.sub_enabled = Convert.ToBoolean(data & 0x04);
+            bg2.regs.sub_enabled = Convert.ToBoolean(data & 0x02);
+            bg1.regs.sub_enabled = Convert.ToBoolean(data & 0x01);
         }  //TS
 
         private void mmio_w212e(byte data)
@@ -900,18 +921,9 @@ namespace Snes
 
         private byte mmio_r2138()
         {
-            uint10 addr = regs.oam_addr++;
-            if (regs.display_disable == false && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240))
-            {
-                addr = regs.oam_iaddr;
-            }
-            if (Convert.ToBoolean(addr & 0x0200))
-            {
-                addr &= 0x021f;
-            }
-
-            regs.ppu1_mdr = StaticRAM.oam[(uint)addr];
-            oam.set_first_sprite();
+            regs.ppu1_mdr = oam_read(regs.oam_addr);
+            regs.oam_addr = (ushort)((regs.oam_addr + 1) & 0x03ff);
+            oam.regs.first_sprite = (byte)(regs.oam_priority == false ? 0 : (regs.oam_addr >> 2) & 127);
             return regs.ppu1_mdr;
         }  //OAMDATAREAD
 
@@ -945,22 +957,16 @@ namespace Snes
 
         private byte mmio_r213b()
         {
-            bool latch = Convert.ToBoolean(regs.cgram_addr & 1);
-            uint9 addr = regs.cgram_addr++;
-            if (regs.display_disable == false && PPUCounter.vcounter() > 0 && PPUCounter.vcounter() < (!regs.overscan ? 225 : 240) && PPUCounter.hcounter() >= 88 && PPUCounter.hcounter() < 1096)
+            if ((regs.cgram_addr & 1) == 0)
             {
-                addr = regs.cgram_iaddr;
-            }
-
-            if (latch == Convert.ToBoolean(0))
-            {
-                regs.ppu2_mdr = StaticRAM.cgram[(uint)addr];
+                regs.ppu2_mdr = (byte)(cgram_read(regs.cgram_addr) & 0xff);
             }
             else
             {
                 regs.ppu2_mdr &= 0x80;
-                regs.ppu2_mdr |= StaticRAM.cgram[(uint)addr];
+                regs.ppu2_mdr |= (byte)(cgram_read(regs.cgram_addr) & 0x7f);
             }
+            regs.cgram_addr = (ushort)((regs.cgram_addr + 1) & 0x01ff);
             return regs.ppu2_mdr;
         }  //CGDATAREAD
 
@@ -968,7 +974,7 @@ namespace Snes
         {
             if (regs.latch_hcounter == Convert.ToBoolean(0))
             {
-                regs.ppu2_mdr = (byte)(regs.hcounter >> 0);
+                regs.ppu2_mdr = (byte)(regs.hcounter & 0xff);
             }
             else
             {
@@ -983,7 +989,7 @@ namespace Snes
         {
             if (regs.latch_vcounter == Convert.ToBoolean(0))
             {
-                regs.ppu2_mdr = (byte)(regs.vcounter >> 0);
+                regs.ppu2_mdr = (byte)(regs.vcounter & 0xff);
             }
             else
             {
@@ -1038,17 +1044,17 @@ namespace Snes
             regs.latch_hcounter = Convert.ToBoolean(0);
             regs.latch_vcounter = Convert.ToBoolean(0);
 
-            regs.oam_iaddr.Assign(0x0000);
-            regs.cgram_iaddr.Assign(0x00);
+            regs.ioamaddr = 0;
+            regs.icgramaddr = 0;
 
             //$2100  INIDISP
-            regs.display_disable = true;
+            regs.display_disabled = true;
             regs.display_brightness = 0;
 
             //$2102  OAMADDL
             //$2103  OAMADDH
-            regs.oam_baseaddr.Assign(0x0000);
-            regs.oam_addr.Assign(0x0000);
+            regs.oam_baseaddr = 0x0000;
+            regs.oam_addr = 0x0000;
             regs.oam_priority = false;
 
             //$2105  BGMODE
@@ -1094,7 +1100,7 @@ namespace Snes
             regs.m7y = 0x0000;
 
             //$2121  CGADD
-            regs.cgram_addr.Assign(0x0000);
+            regs.cgram_addr = 0x0000;
 
             //$2133  SETINI
             regs.mode7_extbg = false;
@@ -1365,12 +1371,7 @@ namespace Snes
             if (PPUCounter.vcounter() == 0)
             {
                 frame();
-                bg1.frame();
-                bg2.frame();
-                bg3.frame();
-                bg4.frame();
             }
-
             bg1.scanline();
             bg2.scanline();
             bg3.scanline();

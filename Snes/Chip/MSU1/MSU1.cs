@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using Nall;
 
@@ -15,8 +16,8 @@ namespace Snes
         public void power() { throw new NotImplementedException(); }
         public void reset() { throw new NotImplementedException(); }
 
-        public byte mmio_read(uint addr) { throw new NotImplementedException(); }
-        public void mmio_write(uint addr, byte data) { throw new NotImplementedException(); }
+        public IEnumerable mmio_read(uint addr, Result result) { throw new NotImplementedException(); }
+        public IEnumerable mmio_write(uint addr, byte data) { throw new NotImplementedException(); }
 
         public void serialize(Serializer s)
         {

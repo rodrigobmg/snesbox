@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using Nall;
 
 namespace Snes
 {
-    public delegate void Scanline();
+    public delegate IEnumerable Scanline();
 
     //PPUcounter emulates the H/V latch counters of the S-PPU2.
     //
@@ -19,13 +20,16 @@ namespace Snes
 
     partial class PPUCounter
     {
-        public void tick()
+        public IEnumerable tick()
         {
             status.hcounter += 2;  //increment by smallest unit of time
             if (status.hcounter >= 1360 && status.hcounter == lineclocks())
             {
                 status.hcounter = 0;
-                vcounter_tick();
+                foreach (var e in vcounter_tick())
+                {
+                    yield return e;
+                };
             }
 
             history.index = (history.index + 1) & 2047;
@@ -34,13 +38,16 @@ namespace Snes
             history.hcounter[history.index] = status.hcounter;
         }
 
-        public void tick(uint clocks)
+        public IEnumerable tick(uint clocks)
         {
             status.hcounter += (ushort)clocks;
             if (status.hcounter >= lineclocks())
             {
                 status.hcounter -= lineclocks();
-                vcounter_tick();
+                foreach (var e in vcounter_tick())
+                {
+                    yield return e;
+                };
             }
         }
 
@@ -126,7 +133,7 @@ namespace Snes
             s.integer(history.index, "history.index");
         }
 
-        private void vcounter_tick()
+        private IEnumerable vcounter_tick()
         {
             if (++status.vcounter == 128)
             {
@@ -146,7 +153,10 @@ namespace Snes
             }
             if (!ReferenceEquals(Scanline, null))
             {
-                Scanline();
+                foreach (var e in Scanline())
+                {
+                    yield return e;
+                };
             }
         }
 

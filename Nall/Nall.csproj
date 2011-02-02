@@ -99,7 +99,6 @@
   <ItemGroup>
     <Compile Include="Bit.cs" />
     <Compile Include="CRC32.cs" />
-    <Compile Include="Libco.cs" />
     <Compile Include="ModuloArray.cs" />
     <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -110,7 +109,6 @@
     <Compile Include="uint2.cs" />
     <Compile Include="uint24.cs" />
     <Compile Include="uint3.cs" />
-    <Compile Include="uint9.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

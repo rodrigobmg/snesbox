@@ -30,6 +30,7 @@ namespace Snes
         public SuperGameBoyVersion supergameboy_version { get; private set; }
         public uint supergameboy_ram_size { get; private set; }
         public uint supergameboy_rtc_size { get; private set; }
+        public uint serial_baud_rate { get; private set; }
 
         public bool has_bsx_slot { get; private set; }
         public bool has_superfx { get; private set; }
@@ -61,6 +62,7 @@ namespace Snes
             supergameboy_version = SuperGameBoyVersion.Version1;
             supergameboy_ram_size = 0;
             supergameboy_rtc_size = 0;
+            serial_baud_rate = 57600;
 
             has_bsx_slot = false;
             has_superfx = false;
@@ -1125,6 +1127,11 @@ namespace Snes
         private void xml_parse_serial(XElement root)
         {
             has_serial = true;
+
+            if (root.Attributes("baud").Any())
+            {
+                serial_baud_rate = Convert.ToUInt32(root.Attribute("baud").Value, 16);
+            }
         }
 
         private void xml_parse_address(Mapping m, string data)

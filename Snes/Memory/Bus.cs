@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using Nall;
 
@@ -116,7 +117,7 @@ namespace Snes
             }
         }
 
-        public byte read(uint24 addr)
+        public IEnumerable read(uint24 addr, Result result)
         {
 #if CHEAT_SYSTEM
             if (Cheat.cheat.active() && Cheat.cheat.exists((uint)addr))
@@ -124,18 +125,25 @@ namespace Snes
                 byte r;
                 if (Cheat.cheat.read((uint)addr, out r))
                 {
-                    return r;
+                    result.Value = r;
+                    yield break;
                 }
             }
 #endif
-            Page p = page[(uint)addr >> 8];
-            return p.access.read(p.offset + (uint)addr);
+            Page p = page[addr >> 8];
+            foreach (var e in p.access.read(p.offset + (uint)addr, result))
+            {
+                yield return e;
+            };
         }
 
-        public void write(uint24 addr, byte data)
+        public IEnumerable write(uint24 addr, byte data)
         {
-            Page p = page[(uint)addr >> 8];
-            p.access.write(p.offset + (uint)addr, data);
+            Page p = page[addr >> 8];
+            foreach (var e in p.access.write(p.offset + (uint)addr, data))
+            {
+                yield return e;
+            };
         }
 
         public bool load_cart()

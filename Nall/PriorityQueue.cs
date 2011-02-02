@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections;
 
 namespace Nall
 {
-    public delegate void Callback(uint arg);
+    public delegate IEnumerable Callback(uint arg);
     //priority queue implementation using binary min-heap array;
     //does not require normalize() function.
     //O(1)     find   (tick)
@@ -11,14 +12,20 @@ namespace Nall
 
     public class PriorityQueue
     {
-        public void priority_queue_nocallback(uint arg) { }
+        public IEnumerable priority_queue_nocallback(uint arg)
+        {
+            yield break;
+        }
 
-        public void tick(uint ticks)
+        public IEnumerable tick(uint ticks)
         {
             basecounter += ticks;
             while (Convert.ToBoolean(heapsize) && gte(basecounter, heap[0].counter))
             {
-                callback(dequeue());
+                foreach (var e in callback(dequeue()))
+                {
+                    yield return e;
+                };
             }
         }
 

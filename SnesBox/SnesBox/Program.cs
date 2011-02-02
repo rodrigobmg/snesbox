@@ -6,12 +6,11 @@ namespace SnesBox
     {
         static void Main(string[] args)
         {
-            using (var game = new SnesBoxGame() { CartridgePath = args[0] })
+            using (SnesBoxGame game = new SnesBoxGame())
             {
                 game.Run();
             }
         }
-
     }
 #endif
 }

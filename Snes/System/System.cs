@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using Nall;
@@ -35,7 +36,7 @@ namespace Snes
             Scheduler.scheduler.thread = PPU.ppu.Processor.thread;
             runthreadtosave();
 
-#if ACCURACY
+#if !FAST_DSP
             Scheduler.scheduler.thread = DSP.dsp.Processor.thread;
             runthreadtosave();
 #endif
@@ -90,16 +91,13 @@ namespace Snes
             Video.video.init();
             Audio.audio.init();
             Input.input.init();
-
-            Input.input.port_set_device(Convert.ToBoolean(0), Configuration.config.controller_port1);
-            Input.input.port_set_device(Convert.ToBoolean(1), Configuration.config.controller_port2);
         }
 
         public void term()
         {
         }
 
-        public void power()
+        public IEnumerable power()
         {
             region = Configuration.config.region;
             expansion = Configuration.config.expansion_port;
@@ -220,8 +218,14 @@ namespace Snes
                 Serial.serial.enable();
             }
 
-            CPU.cpu.power();
-            SMP.smp.power();
+            foreach (var e in CPU.cpu.power())
+            {
+                yield return e;
+            };
+            foreach (var e in SMP.smp.power())
+            {
+                yield return e;
+            };
             DSP.dsp.power();
             PPU.ppu.power();
 
@@ -330,14 +334,22 @@ namespace Snes
 
             Scheduler.scheduler.init();
 
+            Input.input.port_set_device(Convert.ToBoolean(0), Configuration.config.controller_port1);
+            Input.input.port_set_device(Convert.ToBoolean(1), Configuration.config.controller_port2);
             Input.input.update();
         }
 
-        public void reset()
+        public IEnumerable reset()
         {
             Bus.bus.reset();
-            CPU.cpu.reset();
-            SMP.smp.reset();
+            foreach (var e in CPU.cpu.reset())
+            {
+                yield return e;
+            };
+            foreach (var e in SMP.smp.reset())
+            {
+                yield return e;
+            };
             DSP.dsp.reset();
             PPU.ppu.reset();
 
@@ -464,12 +476,12 @@ namespace Snes
         {
         }
 
-        public void scanline()
+        public IEnumerable scanline()
         {
             Video.video.scanline();
             if (CPU.cpu.PPUCounter.vcounter() == 241)
             {
-                Scheduler.scheduler.exit(Scheduler.ExitReason.FrameEvent);
+                yield return Scheduler.ExitReason.FrameEvent;
             }
         }
 
@@ -559,8 +571,8 @@ namespace Snes
 
         private void serialize(Serializer s)
         {
-            s.integer((uint)region, "(unsigned&)region");
-            s.integer((uint)expansion, "(unsigned&)expansion");
+            s.integer((uint)region, "(unsigned&) region");
+            s.integer((uint)expansion, "(unsigned&) expansion");
         }
 
         private void serialize_all(Serializer s)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 namespace Snes
 {
@@ -7,7 +8,7 @@ namespace Snes
         public static BitmapRAM bitmapram = new BitmapRAM();
 
         public override uint size() { throw new NotImplementedException(); }
-        public override byte read(uint addr) { throw new NotImplementedException(); }
-        public override void write(uint addr, byte data) { throw new NotImplementedException(); }
+        public override IEnumerable read(uint addr, Result result) { throw new NotImplementedException(); }
+        public override IEnumerable write(uint addr, byte data) { throw new NotImplementedException(); }
     }
 }

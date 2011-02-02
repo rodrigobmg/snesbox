@@ -19,7 +19,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Accuracy|x86'">
     <OutputPath>bin\x86\Accuracy\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM, ACCURACY</DefineConstants>
+    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM</DefineConstants>
     <Optimize>true</Optimize>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
@@ -38,7 +38,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Compatibility|x86'">
     <OutputPath>bin\x86\Compatibility\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM, COMPATIBILITY</DefineConstants>
+    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM, FAST_DSP, FAST_PPU</DefineConstants>
     <Optimize>true</Optimize>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
@@ -57,7 +57,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Performance|x86'">
     <OutputPath>bin\x86\Performance\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM, PERFORMANCE</DefineConstants>
+    <DefineConstants>TRACE;WINDOWS, CHEAT_SYSTEM, FAST_CPU, FAST_DSP, FAST_PPU</DefineConstants>
     <Optimize>true</Optimize>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
@@ -101,7 +101,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\Audio.cs" />
-    <Compile Include="Audio\AudioRefreshEventArgs.cs" />
     <Compile Include="Cartridge\Mapping.cs" />
     <Compile Include="Cheat\CheatCode.cs" />
     <Compile Include="Chip\BSX\BSXBase.cs" />
@@ -198,23 +197,22 @@
     <Compile Include="DSP\DSP.cs" />
     <Compile Include="DSP\State.cs" />
     <Compile Include="DSP\Voice.cs" />
-    <Compile Include="Input\InputStateEventArgs.cs" />
-    <Compile Include="Performance\CPU\Channel.cs" />
-    <Compile Include="Performance\CPU\CPU.cs" />
-    <Compile Include="Performance\CPU\Status.cs" />
-    <Compile Include="Performance\DSP\DSP.cs" />
-    <Compile Include="Performance\DSP\SPCDSP.cs" />
-    <Compile Include="Performance\DSP\SPCStateCopier.cs" />
-    <Compile Include="Performance\DSP\State.cs" />
-    <Compile Include="Performance\DSP\Voice.cs" />
-    <Compile Include="Compatibility\PPU\BackgroundInfo.cs" />
-    <Compile Include="Compatibility\PPU\Cache.cs" />
-    <Compile Include="Compatibility\PPU\OamTileItem.cs" />
-    <Compile Include="Compatibility\PPU\Pixel.cs" />
-    <Compile Include="Compatibility\PPU\PPU.cs" />
-    <Compile Include="Compatibility\PPU\Regs.cs" />
-    <Compile Include="Compatibility\PPU\SpriteItem.cs" />
-    <Compile Include="Compatibility\PPU\Window.cs" />
+    <Compile Include="Fast\CPU\Channel.cs" />
+    <Compile Include="Fast\CPU\CPU.cs" />
+    <Compile Include="Fast\CPU\Status.cs" />
+    <Compile Include="Fast\DSP\DSP.cs" />
+    <Compile Include="Fast\DSP\SPCDSP.cs" />
+    <Compile Include="Fast\DSP\SPCStateCopier.cs" />
+    <Compile Include="Fast\DSP\State.cs" />
+    <Compile Include="Fast\DSP\Voice.cs" />
+    <Compile Include="Fast\PPU\BackgroundInfo.cs" />
+    <Compile Include="Fast\PPU\Cache.cs" />
+    <Compile Include="Fast\PPU\OamTileItem.cs" />
+    <Compile Include="Fast\PPU\Pixel.cs" />
+    <Compile Include="Fast\PPU\PPU.cs" />
+    <Compile Include="Fast\PPU\Regs.cs" />
+    <Compile Include="Fast\PPU\SpriteItem.cs" />
+    <Compile Include="Fast\PPU\Window.cs" />
     <Compile Include="Info\Info.cs" />
     <Compile Include="Input\Justifier.cs" />
     <Compile Include="Input\Port.cs" />
@@ -224,18 +222,6 @@
     <Compile Include="LibSnes\LibSnesInterface.cs" />
     <Compile Include="LibSnes\LibSnes.cs" />
     <Compile Include="Memory\Page.cs" />
-    <Compile Include="Performance\PPU\Background.cs" />
-    <Compile Include="Performance\PPU\Cache.cs" />
-    <Compile Include="Performance\PPU\ColorWindow.cs" />
-    <Compile Include="Performance\PPU\Display.cs" />
-    <Compile Include="Performance\PPU\LayerWindow.cs" />
-    <Compile Include="Performance\PPU\List.cs" />
-    <Compile Include="Performance\PPU\Output.cs" />
-    <Compile Include="Performance\PPU\PPU.cs" />
-    <Compile Include="Performance\PPU\Regs.cs" />
-    <Compile Include="Performance\PPU\Screen.cs" />
-    <Compile Include="Performance\PPU\Sprite.cs" />
-    <Compile Include="Performance\PPU\TileList.cs" />
     <Compile Include="PPU\Background.cs" />
     <Compile Include="PPU\Display.cs" />
     <Compile Include="PPU\History.cs" />
@@ -249,6 +235,7 @@
     <Compile Include="PPU\SpriteItem.cs" />
     <Compile Include="PPU\State.cs" />
     <Compile Include="PPU\Status.cs" />
+    <Compile Include="PPU\T.cs" />
     <Compile Include="PPU\TileItem.cs" />
     <Compile Include="PPU\Window.cs" />
     <Compile Include="Processor.cs" />
@@ -277,7 +264,6 @@
     <Compile Include="SMP\Status.cs" />
     <Compile Include="System\System.cs" />
     <Compile Include="Video\Video.cs" />
-    <Compile Include="Video\VideoRefreshEventArgs.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

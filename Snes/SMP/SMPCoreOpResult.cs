@@ -3,7 +3,7 @@ namespace Snes
 {
     public class SMPCoreOpResult
     {
-        public byte result_byte { get; set; }
-        public ushort result_ushort { get; set; }
+        public byte ByteValue { get; set; }
+        public ushort UShortValue { get; set; }
     }
 }

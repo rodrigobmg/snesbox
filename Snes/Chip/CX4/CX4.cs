@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Nall;
 
 namespace Snes
@@ -13,8 +14,8 @@ namespace Snes
         public void power() { throw new NotImplementedException(); }
         public void reset() { throw new NotImplementedException(); }
 
-        public override byte read(uint addr) { throw new NotImplementedException(); }
-        public override void write(uint addr, byte data) { throw new NotImplementedException(); }
+        public override IEnumerable read(uint addr, Result result) { throw new NotImplementedException(); }
+        public override IEnumerable write(uint addr, byte data) { throw new NotImplementedException(); }
 
         public void serialize(Serializer s)
         {

@@ -1,7 +1,8 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
-    public delegate void CPUCoreOp(CPUCoreOpArgument args);
+    public delegate IEnumerable CPUCoreOp(CPUCoreOpArgument args);
 
     public class CPUCoreOperation
     {
@@ -14,9 +15,12 @@ namespace Snes
             this.args = args;
         }
 
-        public void Invoke()
+        public IEnumerable Invoke()
         {
-            op(args);
+            foreach (var e in op(args))
+            {
+                yield return e;
+            };
         }
     }
 }

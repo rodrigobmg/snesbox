@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 namespace Snes
 {
@@ -11,12 +12,12 @@ namespace Snes
             throw new NotImplementedException();
         }
 
-        public override byte read(uint addr)
+        public override IEnumerable read(uint addr, Result result)
         {
             throw new NotImplementedException();
         }
 
-        public override void write(uint addr, byte data)
+        public override IEnumerable write(uint addr, byte data)
         {
             throw new NotImplementedException();
         }

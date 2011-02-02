@@ -1,4 +1,4 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 using System;
 using Nall;
 
@@ -16,8 +16,6 @@ namespace Snes
 
             public void update(uint addr, byte data)
             {
-                StaticRAM.oam[addr] = data;
-
                 if (addr < 0x0200)
                 {
                     uint n = addr >> 2;
@@ -59,12 +57,7 @@ namespace Snes
 
             public void address_reset()
             {
-                self.regs.oam_addr = self.regs.oam_baseaddr;
-                set_first_sprite();
-            }
-
-            public void set_first_sprite()
-            {
+                self.regs.oam_addr = (ushort)(self.regs.oam_baseaddr << 1);
                 regs.first_sprite = (self.regs.oam_priority == false ? (byte)0 : (byte)((self.regs.oam_addr >> 2) & 127));
             }
 
@@ -86,7 +79,7 @@ namespace Snes
                 var oam_item = t.item[Convert.ToInt32(t.active)];
                 var oam_tile = t.tile[Convert.ToInt32(t.active)];
 
-                if (t.y == (!self.regs.overscan ? 225 : 240) && self.regs.display_disable == false)
+                if (t.y == (!self.regs.overscan ? 225 : 240) && self.regs.display_disabled == false)
                 {
                     address_reset();
                 }
@@ -121,11 +114,11 @@ namespace Snes
                 //TODO: Remove this hack
                 if (t.item_count > 0 && (t.item_count > oam_item.Length))
                 {
-                    ppu.regs.oam_iaddr.Assign(0x0200 + (0 >> 2));
+                    ppu.regs.ioamaddr = (ushort)(0x0200 + (0 >> 2));
                 }
                 else if (t.item_count > 0 && oam_item[t.item_count - 1] != 0xff)
                 {
-                    ppu.regs.oam_iaddr.Assign((uint)(0x0200 + (oam_item[t.item_count - 1] >> 2)));
+                    ppu.regs.ioamaddr = (ushort)(0x0200 + (oam_item[t.item_count - 1] >> 2));
                 }
             }
 
@@ -161,15 +154,15 @@ namespace Snes
 
                     if (Convert.ToBoolean(color))
                     {
-                        if (regs.main_enable)
+                        if (regs.main_enabled)
                         {
-                            output.main.palette = (byte)(tile.palette + color);
+                            output.main.palette = tile.palette + color;
                             output.main.priority = priority_table[tile.priority];
                         }
 
-                        if (regs.sub_enable)
+                        if (regs.sub_enabled)
                         {
-                            output.sub.palette = (byte)(tile.palette + color);
+                            output.sub.palette = tile.palette + color;
                             output.sub.priority = priority_table[tile.priority];
                         }
                     }
@@ -310,8 +303,8 @@ namespace Snes
                     }
                 }
 
-                regs.main_enable = Convert.ToBoolean(0);
-                regs.sub_enable = Convert.ToBoolean(0);
+                regs.main_enabled = Convert.ToBoolean(0);
+                regs.sub_enabled = Convert.ToBoolean(0);
                 regs.interlace = Convert.ToBoolean(0);
 
                 regs.base_size = 0;
@@ -371,8 +364,8 @@ namespace Snes
                     }
                 }
 
-                s.integer(regs.main_enable, "regs.main_enabled");
-                s.integer(regs.sub_enable, "regs.sub_enabled");
+                s.integer(regs.main_enabled, "regs.main_enabled");
+                s.integer(regs.sub_enabled, "regs.sub_enabled");
                 s.integer(regs.interlace, "regs.interlace");
 
                 s.integer(regs.base_size, "regs.base_size");

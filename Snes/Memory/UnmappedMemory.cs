@@ -1,4 +1,5 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
     class UnmappedMemory : Memory
@@ -10,11 +11,15 @@ namespace Snes
             return 16 * 1024 * 1024;
         }
 
-        public override byte read(uint addr)
+        public override IEnumerable read(uint addr, Result result)
         {
-            return CPU.cpu.regs.mdr;
+            result.Value = CPU.cpu.regs.mdr;
+            yield break;
         }
 
-        public override void write(uint addr, byte data) { }
+        public override IEnumerable write(uint addr, byte data)
+        {
+            yield break;
+        }
     }
 }

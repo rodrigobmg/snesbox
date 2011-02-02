@@ -4,17 +4,22 @@ using Nall;
 
 namespace Snes
 {
-    public enum Port { One = 0, Two = 1 }
-    public enum Device { None = 0, Joypad = 1, Multitap = 2, Mouse = 3, SuperScope = 4, Justifier = 5, Justifiers = 6 }
-    public enum Joypad { B = 1 << 0, Y = 1 << 1, Select = 1 << 2, Start = 1 << 3, Up = 1 << 4, Down = 1 << 5, Left = 1 << 6, Right = 1 << 7, A = 1 << 8, X = 1 << 9, L = 1 << 10, R = 1 << 11 }
-    public enum Mouse { X = 1 << 0, Y = 1 << 1, Left = 1 << 2, Right = 1 << 3 }
-    public enum SuperScope { X = 1 << 0, Y = 1 << 1, Trigger = 1 << 2, Cursor = 1 << 3, Turbo = 1 << 4, Pause = 1 << 5 }
-    public enum Justifier { X = 1 << 0, Y = 1 << 1, Trigger = 1 << 2, Start = 1 << 3 }
-    public enum Region { NTSC = 0, PAL = 1 }
-    public enum MemoryType { RAM = 0, RTC = 1, BSXRAM = 2, BSXPRAM = 3, SufamiTurboARAM = 4, SufamiTurboBRAM = 5, GameBoyRAM = 6, GameBoyRTC = 7 }
-
     public static class LibSnes
     {
+        public enum SnesPort { ONE = 0, TWO = 1 }
+        public enum SnesDevice { NONE = 0, JOYPAD = 1, MULTITAP = 2, MOUSE = 3, SUPER_SCOPE = 4, JUSTIFIER = 5, JUSTIFIERS = 6 }
+        public enum SnesDeviceIdJoypad { B = 0, Y = 1, SELECT = 2, START = 3, UP = 4, DOWN = 5, LEFT = 6, RIGHT = 7, A = 8, X = 9, L = 10, R = 11 }
+        public enum SnesDeviceIdMouse { X = 0, Y = 1, LEFT = 2, RIGHT = 3 }
+        public enum SnesDeviceIdSuperScope { X = 0, Y = 1, TRIGGER = 2, CURSOR = 3, TURBO = 4, PAUSE = 5 }
+        public enum SnesDeviceIdJustifier { X = 0, Y = 1, TRIGGER = 2, START = 3 }
+        public enum SnesRegion { NTSC = 0, PAL = 1 }
+        public enum SnesMemory { CARTRIDGE_RAM = 0, CARTRIDGE_RTC = 1, BSX_RAM = 2, BSX_PRAM = 3, SUFAMI_TURBO_A_RAM = 4, SUFAMI_TURBO_B_RAM = 5, GAME_BOY_RAM = 6, GAME_BOY_RTC = 7 }
+
+        public delegate void SnesVideoRefresh(ArraySegment<ushort> data, uint width, uint height);
+        public delegate void SnesAudioSample(ushort left, ushort right);
+        public delegate void SnesInputPoll();
+        public delegate short SnesInputState(bool port, uint device, uint index, uint id);
+
         public static uint snes_library_revision_major()
         {
             return 1;
@@ -22,97 +27,93 @@ namespace Snes
 
         public static uint snes_library_revision_minor()
         {
-            return 1;
+            return 0;
         }
 
-        public static event EventHandler<VideoRefreshEventArgs> VideoRefresh = null;
-        public static event EventHandler<AudioRefreshEventArgs> AudioRefresh = null;
-        public static event EventHandler InputPoll = null;
-        public static event EventHandler<InputStateEventArgs> InputState = null;
+        public static event SnesVideoRefresh snes_video_refresh = null;
+        public static event SnesAudioSample snes_audio_sample = null;
+        public static event SnesInputPoll snes_input_poll = null;
+        public static event SnesInputState snes_input_state = null;
 
         static LibSnes()
         {
-            LibSnesInterface.inter.pvideo_refresh += new EventHandler<VideoRefreshEventArgs>(inter_pvideo_refresh);
-            LibSnesInterface.inter.paudio_sample += new EventHandler<AudioRefreshEventArgs>(inter_paudio_sample);
-            LibSnesInterface.inter.pinput_poll += new EventHandler(inter_pinput_poll);
-            LibSnesInterface.inter.pinput_state += new EventHandler<InputStateEventArgs>(inter_pinput_state);
+            LibSnesInterface.inter.pvideo_refresh += new SnesVideoRefresh(Default_pvideo_refresh);
+            LibSnesInterface.inter.paudio_sample += new SnesAudioSample(Default_paudio_sample);
+            LibSnesInterface.inter.pinput_poll += new SnesInputPoll(Default_pinput_poll);
+            LibSnesInterface.inter.pinput_state += new SnesInputState(Default_pinput_state);
         }
 
-        static void inter_pvideo_refresh(object sender, VideoRefreshEventArgs e)
+        static void Default_pvideo_refresh(ArraySegment<ushort> data, uint width, uint height)
         {
-            if (!ReferenceEquals(VideoRefresh, null))
+            if (!ReferenceEquals(snes_video_refresh, null))
             {
-                VideoRefresh(null, e);
+                snes_video_refresh(data, width, height);
             }
         }
 
-        static void inter_paudio_sample(object sender, AudioRefreshEventArgs e)
+        static void Default_paudio_sample(ushort left, ushort right)
         {
-            if (!ReferenceEquals(AudioRefresh, null))
+            if (!ReferenceEquals(snes_audio_sample, null))
             {
-                AudioRefresh(null, e);
+                snes_audio_sample(left, right);
             }
         }
 
-        static void inter_pinput_poll(object sender, EventArgs e)
+        static void Default_pinput_poll()
         {
-            if (!ReferenceEquals(InputPoll, null))
+            if (!ReferenceEquals(snes_input_poll, null))
             {
-                InputPoll(null, e);
+                snes_input_poll();
             }
         }
 
-        static void inter_pinput_state(object sender, InputStateEventArgs e)
+        static short Default_pinput_state(bool port, uint device, uint index, uint id)
         {
-            if (!ReferenceEquals(InputState, null))
+            if (!ReferenceEquals(snes_input_state, null))
             {
-                InputState(null, e);
+                return snes_input_state(port, device, index, id);
             }
+            return 0;
         }
 
-        public static void SetControllerPortDevice(Port port, Device device)
+        public static void snes_set_controller_port_device(bool port, uint device)
         {
-            Input.input.port_set_device(Convert.ToBoolean(port), (Input.Device)device);
+            Input.input.port_set_device(port, (Input.Device)device);
         }
 
-        public static void SetCartridgeBasename(string basename)
-        {
-            Cartridge.cartridge.basename = basename;
-        }
-
-        public static void Init()
+        public static void snes_init()
         {
             System.system.init(LibSnesInterface.inter);
             Input.input.port_set_device(Convert.ToBoolean(0), Input.Device.Joypad);
             Input.input.port_set_device(Convert.ToBoolean(1), Input.Device.Joypad);
         }
 
-        public static void Term()
+        public static void snes_term()
         {
             System.system.term();
         }
 
-        public static void Power()
+        public static void snes_power()
         {
-            System.system.power();
+            foreach (var e in System.system.power()) { }
         }
 
-        public static void Reset()
+        public static void snes_reset()
         {
-            System.system.reset();
+            foreach (var e in System.system.reset()) { }
         }
 
-        public static void Run()
+        public static void snes_run()
         {
             System.system.run();
         }
 
-        public static uint SerializeSize()
+        public static uint snes_serialize_size()
         {
             return System.system.serialize_size;
         }
 
-        public static bool Serialize(byte[] data, uint size)
+        public static bool snes_serialize(byte[] data, uint size)
         {
             System.system.runtosave();
             Serializer s = System.system.serialize();
@@ -124,41 +125,41 @@ namespace Snes
             return true;
         }
 
-        public static bool Unserialize(byte[] data, uint size)
+        public static bool snes_unserialize(byte[] data, uint size)
         {
             Serializer s = new Serializer(data, size);
             return System.system.unserialize(s);
         }
 
-        public static void CheatReset()
+        public static void snes_cheat_reset()
         {
             Cheat.cheat.Clear();
             Cheat.cheat.synchronize();
         }
 
-        public static void CheatSet(uint index, bool enabled, string code)
+        public static void snes_cheat_set(uint index, bool enabled, string code)
         {
             Cheat.cheat[(int)index].Assign(code);
             Cheat.cheat[(int)index].enabled = enabled;
             Cheat.cheat.synchronize();
         }
 
-        public static bool LoadCartridgeNormal(byte[] rom_xml, byte[] rom_data, uint rom_size)
+        public static bool snes_load_cartridge_normal(byte[] rom_xml, byte[] rom_data, uint rom_size)
         {
-            CheatReset();
+            snes_cheat_reset();
             if (!ReferenceEquals(rom_data, null))
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
             string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.Normal, new string[] { xmlrom });
-            System.system.power();
+            foreach (var e in System.system.power()) { }
             return true;
         }
 
-        public static bool LoadCartridgeBsxSlotted(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] bsx_xml, byte[] bsx_data, uint bsx_size)
+        public static bool snes_load_cartridge_bsx_slotted(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] bsx_xml, byte[] bsx_data, uint bsx_size)
         {
-            CheatReset();
+            snes_cheat_reset();
             if (!ReferenceEquals(rom_data, null))
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
@@ -170,13 +171,13 @@ namespace Snes
             }
             string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.BsxSlotted, new string[] { xmlrom, xmlbsx });
-            System.system.power();
+            foreach (var e in System.system.power()) { }
             return true;
         }
 
-        public static bool LoadCartridgeBsx(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] bsx_xml, byte[] bsx_data, uint bsx_size)
+        public static bool snes_load_cartridge_bsx(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] bsx_xml, byte[] bsx_data, uint bsx_size)
         {
-            CheatReset();
+            snes_cheat_reset();
             if (!ReferenceEquals(rom_data, null))
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
@@ -188,13 +189,13 @@ namespace Snes
             }
             string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.Bsx, new string[] { xmlrom, xmlbsx });
-            System.system.power();
+            foreach (var e in System.system.power()) { }
             return true;
         }
 
-        public static bool LoadCartridgeSufamiTurbo(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] sta_xml, byte[] sta_data, uint sta_size, byte[] stb_xml, byte[] stb_data, uint stb_size)
+        public static bool snes_load_cartridge_sufami_turbo(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] sta_xml, byte[] sta_data, uint sta_size, byte[] stb_xml, byte[] stb_data, uint stb_size)
         {
-            CheatReset();
+            snes_cheat_reset();
             if (!ReferenceEquals(rom_data, null))
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
@@ -211,13 +212,13 @@ namespace Snes
             }
             string xmlstb = (!ReferenceEquals(stb_xml, null)) ? new UTF8Encoding().GetString(stb_xml) : new SnesInformation(stb_data, stb_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.SufamiTurbo, new string[] { xmlrom, xmlsta, xmlstb });
-            System.system.power();
+            foreach (var e in System.system.power()) { }
             return true;
         }
 
-        public static bool LoadCartridgeGameBoy(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] dmg_xml, byte[] dmg_data, uint dmg_size)
+        public static bool snes_load_cartridge_super_game_boy(byte[] rom_xml, byte[] rom_data, uint rom_size, byte[] dmg_xml, byte[] dmg_data, uint dmg_size)
         {
-            CheatReset();
+            snes_cheat_reset();
             if (!ReferenceEquals(rom_data, null))
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
@@ -229,68 +230,65 @@ namespace Snes
             }
             string xmldmg = (!ReferenceEquals(dmg_xml, null)) ? new UTF8Encoding().GetString(dmg_xml) : new SnesInformation(dmg_data, dmg_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.SuperGameBoy, new string[] { xmlrom, xmldmg });
-            System.system.power();
+            foreach (var e in System.system.power()) { }
             return true;
         }
 
-        public static void UnloadCartridge()
+        public static void snes_unload_cartridge()
         {
             Cartridge.cartridge.unload();
         }
 
-        public static Region Region
+        public static bool snes_get_region()
         {
-            get
-            {
-                return (Region)Convert.ToInt32(System.system.region == System.Region.NTSC ? Convert.ToBoolean(0) : Convert.ToBoolean(1));
-            }
+            return System.system.region == System.Region.NTSC ? Convert.ToBoolean(0) : Convert.ToBoolean(1);
         }
 
-        public static byte[] GetMemoryData(uint id)
+        public static byte[] snes_get_memory_data(uint id)
         {
             if (Cartridge.cartridge.loaded == false)
             {
                 return null;
             }
 
-            switch ((MemoryType)id)
+            switch ((SnesMemory)id)
             {
-                case MemoryType.RAM:
+                case SnesMemory.CARTRIDGE_RAM:
                     return MappedRAM.cartram.data();
-                case MemoryType.RTC:
+                case SnesMemory.CARTRIDGE_RTC:
                     return MappedRAM.cartrtc.data();
-                case MemoryType.BSXRAM:
+                case SnesMemory.BSX_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.Bsx)
                     {
                         break;
                     }
                     return MappedRAM.bsxram.data();
-                case MemoryType.BSXPRAM:
+                case SnesMemory.BSX_PRAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.Bsx)
                     {
                         break;
                     }
                     return MappedRAM.bsxpram.data();
-                case MemoryType.SufamiTurboARAM:
+                case SnesMemory.SUFAMI_TURBO_A_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SufamiTurbo)
                     {
                         break;
                     }
                     return MappedRAM.stAram.data();
-                case MemoryType.SufamiTurboBRAM:
+                case SnesMemory.SUFAMI_TURBO_B_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SufamiTurbo)
                     {
                         break;
                     }
                     return MappedRAM.stBram.data();
-                case MemoryType.GameBoyRAM:
+                case SnesMemory.GAME_BOY_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SuperGameBoy)
                     {
                         break;
                     }
                     SuperGameBoy.supergameboy.save();
                     return MappedRAM.gbram.data();
-                case MemoryType.GameBoyRTC:
+                case SnesMemory.GAME_BOY_RTC:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SuperGameBoy)
                     {
                         break;
@@ -302,7 +300,7 @@ namespace Snes
             return null;
         }
 
-        public static uint GetMemorySize(uint id)
+        public static uint snes_get_memory_size(uint id)
         {
             if (Cartridge.cartridge.loaded == false)
             {
@@ -310,50 +308,50 @@ namespace Snes
             }
             uint size = 0;
 
-            switch ((MemoryType)id)
+            switch ((SnesMemory)id)
             {
-                case MemoryType.RAM:
+                case SnesMemory.CARTRIDGE_RAM:
                     size = MappedRAM.cartram.size();
                     break;
-                case MemoryType.RTC:
+                case SnesMemory.CARTRIDGE_RTC:
                     size = MappedRAM.cartrtc.size();
                     break;
-                case MemoryType.BSXRAM:
+                case SnesMemory.BSX_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.Bsx)
                     {
                         break;
                     }
                     size = MappedRAM.bsxram.size();
                     break;
-                case MemoryType.BSXPRAM:
+                case SnesMemory.BSX_PRAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.Bsx)
                     {
                         break;
                     }
                     size = MappedRAM.bsxpram.size();
                     break;
-                case MemoryType.SufamiTurboARAM:
+                case SnesMemory.SUFAMI_TURBO_A_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SufamiTurbo)
                     {
                         break;
                     }
                     size = MappedRAM.stAram.size();
                     break;
-                case MemoryType.SufamiTurboBRAM:
+                case SnesMemory.SUFAMI_TURBO_B_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SufamiTurbo)
                     {
                         break;
                     }
                     size = MappedRAM.stBram.size();
                     break;
-                case MemoryType.GameBoyRAM:
+                case SnesMemory.GAME_BOY_RAM:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SuperGameBoy)
                     {
                         break;
                     }
                     size = MappedRAM.gbram.size();
                     break;
-                case MemoryType.GameBoyRTC:
+                case SnesMemory.GAME_BOY_RTC:
                     if (Cartridge.cartridge.mode != Cartridge.Mode.SuperGameBoy)
                     {
                         break;

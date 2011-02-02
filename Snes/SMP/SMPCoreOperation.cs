@@ -1,12 +1,14 @@
-﻿
+﻿using System.Collections;
+
 namespace Snes
 {
-    public delegate SMPCoreOpResult SMPCoreOp(SMPCoreOpArgument args);
+    public delegate IEnumerable SMPCoreOp(SMPCoreOpArgument args, SMPCoreOpResult result);
 
     public class SMPCoreOperation
     {
         private SMPCoreOp op { get; set; }
         private SMPCoreOpArgument args { get; set; }
+        private static SMPCoreOpResult result = new SMPCoreOpResult();
 
         public SMPCoreOperation(SMPCoreOp op, SMPCoreOpArgument args)
         {
@@ -14,9 +16,12 @@ namespace Snes
             this.args = args;
         }
 
-        public void Invoke()
+        public IEnumerable Invoke()
         {
-            op(args);
+            foreach (var e in op(args, result))
+            {
+                yield return e;
+            };
         }
     }
 }

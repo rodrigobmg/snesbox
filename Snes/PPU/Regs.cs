@@ -1,5 +1,4 @@
-﻿#if ACCURACY
-using Nall;
+﻿#if !FAST_PPU
 namespace Snes
 {
     partial class PPU
@@ -18,17 +17,17 @@ namespace Snes
             public bool latch_hcounter;
             public bool latch_vcounter;
 
-            public uint10 oam_iaddr;
-            public uint9 cgram_iaddr;
+            public ushort ioamaddr;
+            public ushort icgramaddr;
 
             //$2100  INIDISP
-            public bool display_disable;
+            public bool display_disabled;
             public uint display_brightness;
 
             //$2102  OAMADDL
             //$2103  OAMADDH
-            public uint10 oam_baseaddr;
-            public uint10 oam_addr;
+            public ushort oam_baseaddr;
+            public ushort oam_addr;
             public bool oam_priority;
 
             //$2105  BGMODE
@@ -74,7 +73,7 @@ namespace Snes
             public ushort m7y;
 
             //$2121  CGADD
-            public uint9 cgram_addr;
+            public ushort cgram_addr;
 
             //$2133  SETINI
             public bool mode7_extbg;
@@ -106,8 +105,8 @@ namespace Snes
                 public uint priority0;
                 public uint priority1;
 
-                public bool main_enable;
-                public bool sub_enable;
+                public bool main_enabled;
+                public bool sub_enabled;
 
                 public uint hoffset;
                 public uint voffset;
@@ -146,8 +145,8 @@ namespace Snes
         {
             public class Regs
             {
-                public bool main_enable;
-                public bool sub_enable;
+                public bool main_enabled;
+                public bool sub_enabled;
                 public bool interlace;
 
                 public byte base_size;

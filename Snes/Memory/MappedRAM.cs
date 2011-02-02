@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Nall;
 
 namespace Snes
@@ -62,17 +63,19 @@ namespace Snes
             return size_;
         }
 
-        public override byte read(uint addr)
+        public override IEnumerable read(uint addr, Result result)
         {
-            return data_[addr];
+            result.Value = data_[addr];
+            yield break;
         }
 
-        public override void write(uint addr, byte n)
+        public override IEnumerable write(uint addr, byte n)
         {
             if (!write_protect_)
             {
                 data_[addr] = n;
             }
+            yield break;
         }
 
         public byte this[uint addr]

@@ -1,20 +1,20 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 namespace Snes
 {
-    partial class PPU
+  partial class PPU
     {
         partial class Background
         {
             public class Output
             {
-                public class Pixel
+                public class Flag
                 {
                     public uint priority;  //0 = none (transparent)
-                    public byte palette;
-                    public ushort tile;
+                    public uint palette;
+                    public uint tile;
                 }
-                public Pixel main = new Pixel();
-                public Pixel sub = new Pixel();
+                public Flag main = new Flag();
+                public Flag sub = new Flag();
             }
         }
     }
@@ -28,7 +28,7 @@ namespace Snes
                 public class Flag
                 {
                     public uint priority;  //0 = none (transparent)
-                    public byte palette;
+                    public uint palette;
                 }
                 public Flag main = new Flag();
                 public Flag sub = new Flag();

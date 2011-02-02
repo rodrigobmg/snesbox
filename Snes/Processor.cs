@@ -1,20 +1,22 @@
-﻿using System.Threading;
+﻿using System.Collections;
 using Nall;
 
 namespace Snes
 {
+    class Result
+    {
+        public byte Value;
+    }
+
     class Processor
     {
-        public Thread thread;
+        public IEnumerator thread;
         public uint frequency;
         public long clock;
 
-        public void create(string name, ThreadStart entryPoint, uint frequency_)
+        public void create(IEnumerable entryPoint, uint frequency_)
         {
-            if (!ReferenceEquals(thread, null))
-                Libco.Delete(thread);
-
-            thread = Libco.Create(name, 65536 * sizeof(int), entryPoint);
+            thread = entryPoint.GetEnumerator();
             frequency = frequency_;
             clock = 0;
         }

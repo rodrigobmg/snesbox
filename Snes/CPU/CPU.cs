@@ -1,4 +1,4 @@
-﻿#if ACCURACY || COMPATIBILITY
+﻿#if !FAST_CPU
 using System;
 using System.Collections.ObjectModel;
 using Nall;
@@ -1100,7 +1100,7 @@ namespace Snes
                 | (Convert.ToUInt32(channel[i].unused) << 5)
                 | (Convert.ToUInt32(channel[i].reverse_transfer) << 4)
                 | (Convert.ToUInt32(channel[i].fixed_transfer) << 3)
-                | (uint)(channel[i].transfer_mode << 0));
+                | (channel[i].transfer_mode << 0));
         }
 
         private byte mmio_r43x1(byte i)
@@ -1165,17 +1165,17 @@ namespace Snes
 
         private void mmio_w2181(byte data)
         {
-            status.wram_addr.Assign((uint)((status.wram_addr & 0x01ff00) | (uint)(data << 0)));
+            status.wram_addr.Assign((status.wram_addr & 0x01ff00) | (uint)(data << 0));
         }
 
         private void mmio_w2182(byte data)
         {
-            status.wram_addr.Assign((uint)((status.wram_addr & 0x0100ff) | (uint)(data << 8)));
+            status.wram_addr.Assign((status.wram_addr & 0x0100ff) | (uint)(data << 8));
         }
 
         private void mmio_w2183(byte data)
         {
-            status.wram_addr.Assign((uint)((status.wram_addr & 0x00ffff) | (uint)(data << 16)));
+            status.wram_addr.Assign((status.wram_addr & 0x00ffff) | (uint)(data << 16));
         }
 
         private void mmio_w4016(byte data)
@@ -1250,22 +1250,22 @@ namespace Snes
 
         private void mmio_w4207(byte data)
         {
-            status.hirq_pos.Assign((uint)((status.hirq_pos & 0x0100) | (uint)(data << 0)));
+            status.hirq_pos.Assign((status.hirq_pos & 0x0100) | (uint)(data << 0));
         }
 
         private void mmio_w4208(byte data)
         {
-            status.hirq_pos.Assign((uint)((status.hirq_pos & 0x00ff) | (uint)(data << 8)));
+            status.hirq_pos.Assign((status.hirq_pos & 0x00ff) | (uint)(data << 8));
         }
 
         private void mmio_w4209(byte data)
         {
-            status.virq_pos.Assign((uint)((status.virq_pos & 0x0100) | (uint)(data << 0)));
+            status.virq_pos.Assign((status.virq_pos & 0x0100) | (uint)(data << 0));
         }
 
         private void mmio_w420a(byte data)
         {
-            status.virq_pos.Assign((uint)((status.virq_pos & 0x00ff) | (uint)(data << 8)));
+            status.virq_pos.Assign((status.virq_pos & 0x00ff) | (uint)(data << 8));
         }
 
         private void mmio_w420b(byte data)
@@ -1623,7 +1623,7 @@ namespace Snes
             if (irq_valid)
             {
                 if ((status.virq_enabled && PPUCounter.vcounter(10) != (uint)(status.virq_pos))
-                    || (status.hirq_enabled && PPUCounter.hcounter(10) != ((uint)status.hirq_pos + 1) * 4)
+                    || (status.hirq_enabled && PPUCounter.hcounter(10) != (status.hirq_pos + 1) * 4)
                     || (Convert.ToBoolean((uint)status.virq_pos) && PPUCounter.vcounter(6) == 0)  //IRQs cannot trigger on last dot of field
                     )
                 {

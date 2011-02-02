@@ -1,4 +1,4 @@
-﻿#if ACCURACY
+﻿#if !FAST_PPU
 using System;
 using Nall;
 
@@ -28,15 +28,15 @@ namespace Snes
                 int outputOffset = 0;
                 if (self.regs.pseudo_hires == false && self.regs.bgmode != 5 && self.regs.bgmode != 6)
                 {
-                    color = get_pixel(Convert.ToBoolean(0));
+                    color = get_pixel(false);
                     output.Array[output.Offset + outputOffset++] = color;
                     output.Array[output.Offset + outputOffset++] = color;
                 }
                 else
                 {
-                    color = get_pixel(Convert.ToBoolean(1));
+                    color = get_pixel(true);
                     output.Array[output.Offset + outputOffset++] = color;
-                    color = get_pixel(Convert.ToBoolean(0));
+                    color = get_pixel(false);
                     output.Array[output.Offset + outputOffset++] = color;
                 }
 
@@ -264,7 +264,7 @@ namespace Snes
                 //========
 
                 output = light_table[self.regs.display_brightness, output];
-                if (self.regs.display_disable)
+                if (self.regs.display_disabled)
                 {
                     output = 0x0000;
                 }
@@ -304,7 +304,6 @@ namespace Snes
             private ushort get_color(uint palette)
             {
                 palette <<= 1;
-                self.regs.cgram_iaddr.Assign(palette);
                 return (ushort)(StaticRAM.cgram[palette + 0] + (StaticRAM.cgram[palette + 1] << 8));
             }
 
