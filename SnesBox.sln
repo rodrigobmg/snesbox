@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snes", "Snes\Snes.csproj", "{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nall", "Nall\Nall.csproj", "{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SuperGameBoy", "SuperGameBoy\SuperGameBoy.csproj", "{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesBox", "SnesBox\SnesBox\SnesBox.csproj", "{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesBoxContent", "SnesBox\SnesBoxContent\SnesBoxContent.contentproj", "{2CD4CA49-E0EF-486E-BC1B-13AE00D56F0D}"
+EndProject
+Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Accuracy|x86 = Accuracy|x86
+		Compatibility|x86 = Compatibility|x86
+		Performance|x86 = Performance|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Accuracy|x86.ActiveCfg = Accuracy|x86
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Accuracy|x86.Build.0 = Accuracy|x86
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Compatibility|x86.ActiveCfg = Compatibility|x86
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Compatibility|x86.Build.0 = Compatibility|x86
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Performance|x86.ActiveCfg = Performance|x86
+		{B8F54CE1-2E10-4B34-ADA6-0D1E1B51CE94}.Performance|x86.Build.0 = Performance|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Accuracy|x86.ActiveCfg = Accuracy|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Accuracy|x86.Build.0 = Accuracy|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Compatibility|x86.ActiveCfg = Compatibility|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Compatibility|x86.Build.0 = Compatibility|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Performance|x86.ActiveCfg = Performance|x86
+		{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}.Performance|x86.Build.0 = Performance|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Accuracy|x86.ActiveCfg = Accuracy|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Accuracy|x86.Build.0 = Accuracy|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Compatibility|x86.ActiveCfg = Compatibility|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Compatibility|x86.Build.0 = Compatibility|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Performance|x86.ActiveCfg = Performance|x86
+		{9A7FE3BF-9E2A-4F17-8CFF-A9B02D9B9C6E}.Performance|x86.Build.0 = Performance|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Accuracy|x86.ActiveCfg = Accuracy|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Accuracy|x86.Build.0 = Accuracy|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Compatibility|x86.ActiveCfg = Compatibility|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Compatibility|x86.Build.0 = Compatibility|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Performance|x86.ActiveCfg = Performance|x86
+		{6AA2D15E-CDB9-4F41-BA52-95DA7A2AA851}.Performance|x86.Build.0 = Performance|x86
+		{2CD4CA49-E0EF-486E-BC1B-13AE00D56F0D}.Accuracy|x86.ActiveCfg = Debug|Any CPU
+		{2CD4CA49-E0EF-486E-BC1B-13AE00D56F0D}.Compatibility|x86.ActiveCfg = Debug|Any CPU
+		{2CD4CA49-E0EF-486E-BC1B-13AE00D56F0D}.Performance|x86.ActiveCfg = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
