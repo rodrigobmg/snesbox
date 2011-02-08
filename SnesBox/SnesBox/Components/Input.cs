@@ -9,6 +9,7 @@ namespace SnesBox.Components
     class Input : GameComponent
     {
         private static Dictionary<Joypad, Buttons> _snesToXnaButtons = new Dictionary<Joypad, Buttons>();
+        private static Dictionary<Joypad, Keys> _snesToXnaKeys = new Dictionary<Joypad, Keys>();
         private const Joypad LeftRight = Joypad.Left | Joypad.Right;
         private const Joypad UpDown = Joypad.Up | Joypad.Down;
 
@@ -35,6 +36,19 @@ namespace SnesBox.Components
             _snesToXnaButtons.Add(Joypad.Up, Buttons.DPadUp);
             _snesToXnaButtons.Add(Joypad.Left, Buttons.DPadLeft);
             _snesToXnaButtons.Add(Joypad.Right, Buttons.DPadRight);
+
+            _snesToXnaKeys.Add(Joypad.A, Keys.X);
+            _snesToXnaKeys.Add(Joypad.B, Keys.Z);
+            _snesToXnaKeys.Add(Joypad.X, Keys.Z);
+            _snesToXnaKeys.Add(Joypad.Y, Keys.A);
+            _snesToXnaKeys.Add(Joypad.L, Keys.D);
+            _snesToXnaKeys.Add(Joypad.R, Keys.C);
+            _snesToXnaKeys.Add(Joypad.Start, Keys.Enter);
+            _snesToXnaKeys.Add(Joypad.Select, Keys.OemQuotes);
+            _snesToXnaKeys.Add(Joypad.Down, Keys.Up);
+            _snesToXnaKeys.Add(Joypad.Up, Keys.Down);
+            _snesToXnaKeys.Add(Joypad.Left, Keys.Left);
+            _snesToXnaKeys.Add(Joypad.Right, Keys.Right);
         }
 
         public override void Initialize()
@@ -69,12 +83,12 @@ namespace SnesBox.Components
         private static Joypad ParseInput(PlayerIndex playerIndex)
         {
             var gamePadState = GamePad.GetState(playerIndex);
+            var keyboardState = Keyboard.GetState(playerIndex);
             var snesButtonStates = default(Joypad);
-            var xnaButtonStates = gamePadState.Buttons;
 
             foreach (Joypad button in Enum.GetValues(typeof(Joypad)))
             {
-                if (gamePadState.IsButtonDown(_snesToXnaButtons[button]))
+                if (gamePadState.IsButtonDown(_snesToXnaButtons[button]) || keyboardState.IsKeyDown(_snesToXnaKeys[button]))
                 {
                     snesButtonStates |= button;
                 }
