@@ -12,7 +12,9 @@ namespace Snes
         public void create(string name, ThreadStart entryPoint, uint frequency_)
         {
             if (!ReferenceEquals(thread, null))
+            {
                 Libco.Delete(thread);
+            }
 
             thread = Libco.Create(name, 65536 * sizeof(int), entryPoint);
             frequency = frequency_;
