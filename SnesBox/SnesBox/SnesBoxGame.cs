@@ -74,5 +74,10 @@ namespace SnesBox
                 Window.Title = string.Format("{0:##} FPS", frameRate.FPS);
             }
         }
+
+        protected override void OnExiting(object sender, System.EventArgs args)
+        {
+           LibSnes.Exit();
+        }
     }
 }

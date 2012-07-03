@@ -107,6 +107,11 @@ namespace Snes
             System.system.run();
         }
 
+        public static void Exit()
+        {
+           Libco.Exit();
+        }
+
         public static uint SerializeSize()
         {
             return System.system.serialize_size;

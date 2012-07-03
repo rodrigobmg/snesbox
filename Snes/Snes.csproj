@@ -279,7 +279,6 @@
     <Compile Include="Video\Video.cs" />
     <Compile Include="Video\VideoRefreshEventArgs.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Nall\Nall.csproj">
       <Project>{F426E103-C770-4F1C-AEBE-99D46B3DDFEE}</Project>
