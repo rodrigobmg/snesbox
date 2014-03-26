@@ -72,9 +72,6 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Components\Audio.cs" />
     <Compile Include="Components\EnumExtensions.cs" />
     <Compile Include="Components\Input.cs" />
