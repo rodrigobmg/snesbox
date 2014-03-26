@@ -582,7 +582,7 @@ namespace Nall
             isize = s.isize;
             icapacity = s.icapacity;
 
-            Array.Copy(s.idata, idata, s.icapacity);
+            Array.Copy(s.idata, idata, (int)s.icapacity);
             return this;
         }
 
@@ -613,7 +613,7 @@ namespace Nall
             idata = new byte[capacity];
             isize = 0;
             icapacity = capacity;
-            Array.Copy(data, idata, capacity);
+            Array.Copy(data, idata, (int)capacity);
         }
 
         private Mode imode;

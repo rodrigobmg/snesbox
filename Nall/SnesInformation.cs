@@ -770,7 +770,7 @@ namespace Nall
 
         private static bool memcmp(byte[] data, uint index, string str, int length)
         {
-            return Convert.ToBoolean(string.Compare(new UTF8Encoding().GetString(data), (int)index, str, 0, length));
+            return Convert.ToBoolean(string.Compare(new UTF8Encoding().GetString(data, 0, data.Length), (int)index, str, 0, length));
         }
 
         private uint find_header(byte[] data, uint size)

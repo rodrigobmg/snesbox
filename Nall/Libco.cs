@@ -8,7 +8,7 @@ namespace Nall
    public static class Libco
    {
       private static Thread _active;
-      private static Dictionary<Thread, ManualResetEventSlim> _threads = new Dictionary<Thread, ManualResetEventSlim>();
+      private static Dictionary<Thread, ManualResetEvent> _threads = new Dictionary<Thread, ManualResetEvent>();
 
       public static Thread Active()
       {
@@ -24,13 +24,13 @@ namespace Nall
          if (ReferenceEquals(_active, null))
          {
             _active = Thread.CurrentThread;
-            _threads.Add(_active, new ManualResetEventSlim(false));
+            _threads.Add(_active, new ManualResetEvent(false));
          }
 
          size += 256; /* allocate additional space for storage */
          size &= ~15; /* align stack to 16-byte boundary */
-         var thread = new Thread(entrypoint, size) {Name = name};
-         _threads.Add(thread, new ManualResetEventSlim(false));
+         var thread = new Thread(entrypoint) {Name = name};
+         _threads.Add(thread, new ManualResetEvent(false));
          return thread;
       }
 
@@ -62,7 +62,7 @@ namespace Nall
             _threads[_active].Set();
          }
 
-         _threads[previous].Wait();
+         _threads[previous].WaitOne();
       }
    }
 }

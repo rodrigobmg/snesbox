@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Xml.Linq;
 using Nall;
 
@@ -175,16 +174,16 @@ namespace Snes
             }
             crc32 = ~checksum;
 
-            // TODO: verify hash
-            var sha = new SHA256Managed();
-            var shahash = sha.ComputeHash(MappedRAM.cartrom.data());
+            //// TODO: verify hash
+            //var sha = new SHA256Managed();
+            //var shahash = sha.ComputeHash(MappedRAM.cartrom.data());
 
-            string hash = string.Empty;
-            foreach (var n in shahash)
-            {
-                hash += n.ToString("X2");
-            }
-            sha256 = hash;
+            //string hash = string.Empty;
+            //foreach (var n in shahash)
+            //{
+            //    hash += n.ToString("X2");
+            //}
+            //sha256 = hash;
 
             Bus.bus.load_cart();
             System.system.serialize_init();

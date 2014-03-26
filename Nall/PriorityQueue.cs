@@ -95,7 +95,11 @@ namespace Nall
             }
         }
 
-        public PriorityQueue(uint size, Callback callback_ = null)
+        public PriorityQueue(uint size)
+            : this(size, null)
+        { }
+
+        public PriorityQueue(uint size, Callback callback_)
         {
             if (ReferenceEquals(callback_, null))
             {

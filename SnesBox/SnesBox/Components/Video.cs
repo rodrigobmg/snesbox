@@ -49,7 +49,7 @@ namespace SnesBox.Components
             var projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0, 0, 1);
             var halfPixelOffset = Matrix.CreateTranslation(-0.5f, -0.5f, 0);
 
-            foreach (var effectType in Enum.GetValues(typeof(Filter)))
+            foreach (var effectType in EnumExtensions.GetEnumValues<Filter>())
             {
                 var effect = Game.Content.Load<Effect>(effectType.ToString());
                 effect.Parameters["MatrixTransform"].SetValue(halfPixelOffset * projection);

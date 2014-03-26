@@ -20,7 +20,8 @@ namespace Snes
         public void set_data_pointer(uint addr) { throw new NotImplementedException(); }
         public void set_data_adjust(uint addr) { throw new NotImplementedException(); }
 
-        public void update_time(int offset = 0) { throw new NotImplementedException(); }
+        public void update_time() { throw new NotImplementedException(); }
+        public void update_time(int offset) { throw new NotImplementedException(); }
         public DateTime create_time() { throw new NotImplementedException(); }
 
         public byte mmio_read(uint addr) { throw new NotImplementedException(); }

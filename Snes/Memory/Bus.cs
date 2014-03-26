@@ -42,7 +42,17 @@ namespace Snes
 
         public enum MapMode : uint { Direct, Linear, Shadow }
 
-        public void map(MapMode mode, byte bank_lo, byte bank_hi, ushort addr_lo, ushort addr_hi, Memory access, uint offset = 0, uint size = 0)
+        public void map(MapMode mode, byte bank_lo, byte bank_hi, ushort addr_lo, ushort addr_hi, Memory access)
+        {
+            map(mode, bank_lo, bank_hi, addr_lo, addr_hi, access, 0);
+        }
+
+        public void map(MapMode mode, byte bank_lo, byte bank_hi, ushort addr_lo, ushort addr_hi, Memory access, uint offset)
+        {
+            map(mode, bank_lo, bank_hi, addr_lo, addr_hi, access, offset, 0);
+        }
+
+        public void map(MapMode mode, byte bank_lo, byte bank_hi, ushort addr_lo, ushort addr_hi, Memory access, uint offset, uint size)
         {
             Debug.Assert(bank_lo <= bank_hi);
             Debug.Assert(addr_lo <= addr_hi);

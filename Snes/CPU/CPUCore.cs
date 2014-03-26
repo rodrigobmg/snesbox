@@ -3176,7 +3176,12 @@ namespace Snes
         public ArraySegment<CPUCoreOperation> opcode_table;
         public CPUCoreOperation[] op_table = new CPUCoreOperation[256 * 5];
 
-        private CPUCoreOp GetCoreOp(string name, string modifier = "")
+        private CPUCoreOp GetCoreOp(string name)
+        {
+            return GetCoreOp(name, string.Empty);
+        }
+
+        private CPUCoreOp GetCoreOp(string name, string modifier)
         {
             return (CPUCoreOp)Delegate.CreateDelegate(typeof(CPUCoreOp), this, "op_" + name + modifier);
         }

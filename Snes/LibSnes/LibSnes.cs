@@ -125,7 +125,7 @@ namespace Snes
             {
                 return false;
             }
-            Array.Copy(s.data(), data, s.size());
+            Array.Copy(s.data(), data, (int)s.size());
             return true;
         }
 
@@ -155,7 +155,7 @@ namespace Snes
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
-            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
+            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml, 0, rom_xml.Length) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.Normal, new string[] { xmlrom });
             System.system.power();
             return true;
@@ -168,12 +168,12 @@ namespace Snes
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
-            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
+            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml, 0, rom_xml.Length) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             if (!ReferenceEquals(bsx_data, null))
             {
                 MappedRAM.bsxflash.copy(bsx_data, bsx_size);
             }
-            string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
+            string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml, 0, bsx_xml.Length) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.BsxSlotted, new string[] { xmlrom, xmlbsx });
             System.system.power();
             return true;
@@ -186,12 +186,12 @@ namespace Snes
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
-            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
+            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml, 0, rom_xml.Length) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             if (!ReferenceEquals(bsx_data, null))
             {
                 MappedRAM.bsxflash.copy(bsx_data, bsx_size);
             }
-            string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
+            string xmlbsx = (!ReferenceEquals(bsx_xml, null)) ? new UTF8Encoding().GetString(bsx_xml, 0, bsx_xml.Length) : new SnesInformation(bsx_data, bsx_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.Bsx, new string[] { xmlrom, xmlbsx });
             System.system.power();
             return true;
@@ -204,17 +204,17 @@ namespace Snes
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
-            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
+            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml, 0, rom_xml.Length) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             if (!ReferenceEquals(sta_data, null))
             {
                 MappedRAM.stArom.copy(sta_data, sta_size);
             }
-            string xmlsta = (!ReferenceEquals(sta_xml, null)) ? new UTF8Encoding().GetString(sta_xml) : new SnesInformation(sta_data, sta_size).xml_memory_map;
+            string xmlsta = (!ReferenceEquals(sta_xml, null)) ? new UTF8Encoding().GetString(sta_xml, 0, sta_xml.Length) : new SnesInformation(sta_data, sta_size).xml_memory_map;
             if (!ReferenceEquals(stb_data, null))
             {
                 MappedRAM.stBrom.copy(stb_data, stb_size);
             }
-            string xmlstb = (!ReferenceEquals(stb_xml, null)) ? new UTF8Encoding().GetString(stb_xml) : new SnesInformation(stb_data, stb_size).xml_memory_map;
+            string xmlstb = (!ReferenceEquals(stb_xml, null)) ? new UTF8Encoding().GetString(stb_xml, 0, stb_xml.Length) : new SnesInformation(stb_data, stb_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.SufamiTurbo, new string[] { xmlrom, xmlsta, xmlstb });
             System.system.power();
             return true;
@@ -227,12 +227,12 @@ namespace Snes
             {
                 MappedRAM.cartrom.copy(rom_data, rom_size);
             }
-            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml) : new SnesInformation(rom_data, rom_size).xml_memory_map;
+            string xmlrom = (!ReferenceEquals(rom_xml, null)) ? new UTF8Encoding().GetString(rom_xml, 0, rom_xml.Length) : new SnesInformation(rom_data, rom_size).xml_memory_map;
             if (!ReferenceEquals(dmg_data, null))
             {
                 MappedRAM.gbrom.copy(dmg_data, dmg_size);
             }
-            string xmldmg = (!ReferenceEquals(dmg_xml, null)) ? new UTF8Encoding().GetString(dmg_xml) : new SnesInformation(dmg_data, dmg_size).xml_memory_map;
+            string xmldmg = (!ReferenceEquals(dmg_xml, null)) ? new UTF8Encoding().GetString(dmg_xml, 0, dmg_xml.Length) : new SnesInformation(dmg_data, dmg_size).xml_memory_map;
             Cartridge.cartridge.load(Cartridge.Mode.SuperGameBoy, new string[] { xmlrom, xmldmg });
             System.system.power();
             return true;

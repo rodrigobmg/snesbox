@@ -44,7 +44,7 @@ namespace Snes
                 size_ = (uint)((size & ~255) + (Convert.ToInt32(Convert.ToBoolean(size & 255)) << 8));
                 data_ = new byte[size_];
             }
-            Array.Copy(data, data_, Math.Min(size_, size));
+            Array.Copy(data, data_, (int)Math.Min(size_, size));
         }
 
         public void write_protect(bool status)

@@ -517,7 +517,7 @@ namespace Snes
             {
                 return false;
             }
-            if (new UTF8Encoding().GetString(profile) != Info.Profile)
+            if (new UTF8Encoding().GetString(profile, 0, profile.Length) != Info.Profile)
             {
                 return false;
             }

@@ -86,7 +86,7 @@ namespace SnesBox.Components
             var keyboardState = Keyboard.GetState(playerIndex);
             var snesButtonStates = default(Joypad);
 
-            foreach (Joypad button in Enum.GetValues(typeof(Joypad)))
+            foreach (Joypad button in EnumExtensions.GetEnumValues<Joypad>())
             {
                 if (gamePadState.IsButtonDown(_snesToXnaButtons[button]) || keyboardState.IsKeyDown(_snesToXnaKeys[button]))
                 {
