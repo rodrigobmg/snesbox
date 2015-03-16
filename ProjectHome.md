@@ -1,0 +1,1 @@
+bsnes is a hardware-level Super Nintendo emulator developed by byuu, at http://byuu.org/.  This is a managed port, using XNA for graphics support.
